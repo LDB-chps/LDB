@@ -1,3 +1,15 @@
+# Build related
+cmake-build-debug
+cmake-build-release
+release
+Release
+debug
+Debug
+
+# IDE related
+.idea
+
+
 # Prerequisites
 *.d
 
