@@ -9,6 +9,8 @@ find_package(Qt6 REQUIRED COMPONENTS Widgets Charts)
 # TODO: Setup code coverage here
 # maybe_enable_code_coverage()
 
+add_subdirectory(resources)
+
 # Main source directory
 add_subdirectory(src)
 
