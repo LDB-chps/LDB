@@ -4,6 +4,8 @@ project(LDB VERSION 0.0.1 LANGUAGES C CXX)
 # Alias to simplify the build down the road
 set(INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
+find_package(Qt6 REQUIRED COMPONENTS Widgets Charts)
+
 # TODO: Setup code coverage here
 # maybe_enable_code_coverage()
 

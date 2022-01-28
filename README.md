@@ -1,2 +1,2 @@
-# LDB
+# LDBApp
 LE debugger
