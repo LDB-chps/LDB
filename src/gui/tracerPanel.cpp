@@ -1,6 +1,7 @@
 #include "tracerPanel.h"
 #include <QLabel>
 #include <QProgressBar>
+#include <QTabWidget>
 #include <QTextEdit>
 #include <QToolBar>
 #include <QToolButton>
@@ -13,36 +14,58 @@ namespace ldb::gui {
     layout->setSpacing(0);
     setLayout(layout);
 
-    QProgressBar* progressBar = new QProgressBar(this);
-    progressBar->setRange(0, 0);
     setupToolbar(layout);
-
-    VariableView* variableView = new VariableView(this);
-    layout->addWidget(variableView, 1, 0, 2, 1);
-    layout->addWidget(new QTextEdit("Code viewer"), 1, 1, 1, 1);
-    // layout->addWidget(new QTextEdit("Stack"), 2, 1, 1, 1);
-    layout->addWidget(progressBar, 2, 1, 1, 1);
+    setupVariableView(layout);
+    setupCodeView(layout);
+    setupTabbedPane(layout);
   }
 
   void TracerPanel::setupToolbar(QGridLayout* layout) {
-    QToolBar* toolbar = new QToolBar(this);
-    toolbar->setIconSize(QSize(16, 16));
-    toolbar->addAction(QIcon(":/icons/folder-open-fill.png"), "Open");
-    toolbar->addSeparator();
-    toolbar->addWidget(new QLabel("Program: <placeholder>"));
-    toolbar->addAction(QIcon(":/icons/skip-back-fill.png"), "Reset");
-    toolbar->addAction(QIcon(":/icons/play-fill.png"), "Play");
-    toolbar->addAction(QIcon(":/icons/stop-fill.png"), "Stop");
-    toolbar->addAction(QIcon(":/icons/skip-forward-fill.png"), "Finish");
-    toolbar->addSeparator();
-    toolbar->addWidget(new QLabel("Current file: <placeholder>"));
-    toolbar->addWidget(new QLabel("PID: <placeholder>"));
+    // Setup the main toolbar
+    toolbar = new TracerToolBar(this);
     layout->addWidget(toolbar, 0, 0, 1, 2);
   }
 
-  void TracerPanel::TracerPanel::setupCodeView() {}
+  void TracerPanel::TracerPanel::setupCodeView(QGridLayout* layout) {
+    code_view = new CodeView(this);
+    layout->addWidget(code_view, 1, 1, 1, 1);
+  }
 
-  void TracerPanel::setupVariableView() {}
+  void TracerPanel::setupVariableView(QGridLayout* layout) {
+    variable_view = new VariableView(this);
+    layout->addWidget(variable_view, 1, 0, 2, 1);
+  }
 
-  void TracerPanel::setupStackedPane() {}
+  void TracerPanel::setupTabbedPane(QGridLayout* layout) {
+    auto* stacked_pane = new QTabWidget(this);
+    stacked_pane->setTabPosition(QTabWidget::South);
+    stacked_pane->setTabShape(QTabWidget::Rounded);
+    stacked_pane->setIconSize(QSize(16, 16));
+
+    // Setup the tab where the log will be displayed
+    auto message = new QTextEdit(this);
+    stacked_pane->addTab(message, "Message");
+    stacked_pane->setTabIcon(0, QIcon(":/icons/menu-2-line.png"));
+
+    // Setup the tab where the stack trace will be displayed
+    stack_trace_view = new StackTraceView(this);
+    stacked_pane->addTab(stack_trace_view, "Stack trace");
+    stacked_pane->setTabIcon(1, QIcon(":/icons/stack-fill.png"));
+
+    // Setup the tab where the loaded libraries will be displayed
+    auto libs = new QTextEdit(this);
+    stacked_pane->addTab(libs, "Loaded libraries");
+    stacked_pane->setTabIcon(2, QIcon(":/icons/list-settings-line.png"));
+
+    // Add the tab widget to the layout
+    layout->addWidget(stacked_pane, 2, 1, 1, 1);
+  }
+
+  void TracerPanel::updateAll() {
+    // Update all the view components
+    toolbar->update(process_tracer.get());
+    variable_view->update(process_tracer.get());
+    code_view->update(process_tracer.get());
+    stack_trace_view->update(process_tracer.get());
+  }
 }// namespace ldb::gui

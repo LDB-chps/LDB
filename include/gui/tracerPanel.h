@@ -38,21 +38,21 @@ namespace ldb::gui {
     /**
      * @brief Popup a dialog to ask the user if he wants to stop the current program if any.
      */
-    void maybeStopCommand();
+    void maybeStopCommand() {}
 
     /**
      * @brief Stop the current program if any.
      */
-    void stopCommand();
+    void stopCommand() {}
 
   private:
     void setupToolbar(QGridLayout* layout);
 
-    void setupCodeView();
+    void setupCodeView(QGridLayout* layout);
 
-    void setupVariableView();
+    void setupVariableView(QGridLayout* layout);
 
-    void setupStackedPane();
+    void setupTabbedPane(QGridLayout* layout);
 
     void updateAll();
 
