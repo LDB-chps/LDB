@@ -6,10 +6,13 @@ set(INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 find_package(Qt6 REQUIRED COMPONENTS Widgets Charts)
 
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
 # TODO: Setup code coverage here
 # maybe_enable_code_coverage()
 
 add_subdirectory(resources)
+add_subdirectory(extern)
 
 # Main source directory
 add_subdirectory(src)

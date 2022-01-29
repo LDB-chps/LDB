@@ -1,10 +1,12 @@
 #include "tracerPanel.h"
+#include "logWidget.h"
 #include <QLabel>
 #include <QProgressBar>
 #include <QTabWidget>
 #include <QTextEdit>
 #include <QToolBar>
 #include <QToolButton>
+#include <tscl.hpp>
 
 
 namespace ldb::gui {
@@ -38,12 +40,15 @@ namespace ldb::gui {
 
   void TracerPanel::setupTabbedPane(QGridLayout* layout) {
     auto* stacked_pane = new QTabWidget(this);
-    stacked_pane->setTabPosition(QTabWidget::South);
+    stacked_pane->setTabPosition(QTabWidget::North);
     stacked_pane->setTabShape(QTabWidget::Rounded);
     stacked_pane->setIconSize(QSize(16, 16));
 
     // Setup the tab where the log will be displayed
-    auto message = new QTextEdit(this);
+    auto& logger = tscl::logger.addHandler<QtLogHandler>("QtHandler");
+    logger.tsType(tscl::timestamp_t::Partial);
+    auto message = logger.getWidget();
+
     stacked_pane->addTab(message, "Message");
     stacked_pane->setTabIcon(0, QIcon(":/icons/menu-2-line.png"));
 

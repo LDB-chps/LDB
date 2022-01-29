@@ -33,7 +33,7 @@ namespace ldb::gui {
     addSeparator();
 
     // Display section for current program
-    addWidget(new QLabel("Current file: "));
     addWidget(new QLabel("PID: "));
+    addWidget(new QLabel("Current file: "));
   }
 }// namespace ldb::gui

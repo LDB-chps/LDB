@@ -7,6 +7,7 @@
 #include <QApplication>
 #include <QFile>
 #include <iostream>
+#include <tscl.hpp>
 
 namespace ldb {
 
@@ -26,10 +27,18 @@ namespace ldb {
     gui::MainWindow main_window;
     main_window.show();
 
+    tscl::Version::setCurrent(tscl::Version(0, 0, 1, "alpha"));
+    tscl::logger("Welcome, LDB version " + tscl::Version::current.to_string(),
+                 tscl::Log::Information);
+
     // If the user has specified a command to trace, open it
     if (argc > 2) {
       auto [command, args] = parse_command(argc, argv);
+      tscl::logger("Starting command: " + command, tscl::Log::Information);
       main_window.startCommand(command, args);
+    } else {
+      tscl::logger("To start, select a binary to trace using file > Load program",
+                   tscl::Log::Information);
     }
     // The stylesheet is in the resources
     QFile stylesheet_file(":/combinear.qss");
