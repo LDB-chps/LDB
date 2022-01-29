@@ -9,11 +9,11 @@
 namespace ldb::gui {
 
   class VariableView : public QFrame {
-  Q_OBJECT
+    Q_OBJECT
 
   public:
-    explicit VariableView(QWidget *parent = nullptr);
+    explicit VariableView(QWidget* parent = nullptr);
 
   private:
   };
-} // ldb::gui
+}// namespace ldb::gui

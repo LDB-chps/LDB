@@ -1,6 +1,4 @@
 #include "process.h"
 
 
-namespace ldb {
-
-}
+namespace ldb {}

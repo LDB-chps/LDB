@@ -6,20 +6,23 @@ namespace ldb {
   class Process {
   public:
     /**
-     * @brief Construct a new Process handle associated with the given pid. Does not start the process.
+     * @brief Construct a new Process handle associated with the given pid. Does not start the
+     * process.
      * @param pid the pid to link to
      */
     explicit Process(pid_t pid);
 
     /**
-     * @brief Launch the command with its argument in a new process and return a Process handle to it.
-     * The new process will automatically call ptrace() to attach to itself to the parent process.
+     * @brief Launch the command with its argument in a new process and return a Process handle to
+     * it. The new process will automatically call ptrace() to attach to itself to the parent
+     * process.
      *
      * @param command
      * @param args
      * @return
      */
-    static std::unique_ptr<Process> fromCommand(const std::string &command, const std::string &args);
+    static std::unique_ptr<Process> fromCommand(const std::string& command,
+                                                const std::string& args);
 
     /**
      * @brief Signal the process to resume execution.
@@ -59,6 +62,4 @@ namespace ldb {
   private:
     pid_t pid = 0;
   };
-}
-
-
+}// namespace ldb

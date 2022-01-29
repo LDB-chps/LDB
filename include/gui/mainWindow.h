@@ -1,18 +1,18 @@
 #pragma once
 
-#include <QMainWindow>
 #include "tracerPanel.h"
+#include <QMainWindow>
 
 namespace ldb::gui {
 
   class MainWindow : public QMainWindow {
-  Q_OBJECT
+    Q_OBJECT
 
   public:
-    explicit MainWindow(QWidget *parent = nullptr);
+    explicit MainWindow(QWidget* parent = nullptr);
 
     // TODO: implement me !
-    bool startCommand(const std::string &command, const std::vector<std::string> &args) {
+    bool startCommand(const std::string& command, const std::vector<std::string>& args) {
       return tracer_panel->startCommand(command, args);
     }
 
@@ -21,7 +21,6 @@ namespace ldb::gui {
 
     void setupTracerPanel();
 
-    TracerPanel *tracer_panel = nullptr;
-
+    TracerPanel* tracer_panel = nullptr;
   };
-} // ldb::gui
+}// namespace ldb::gui

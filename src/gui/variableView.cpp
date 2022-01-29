@@ -5,14 +5,13 @@
 // You may need to build the project (run Qt uic code generator) to get "ui_variableView.h" resolved
 
 #include "variableView.h"
-#include <QLabel>
 #include <QGridLayout>
+#include <QLabel>
 namespace ldb::gui {
-  VariableView::VariableView(QWidget *parent) :
-          QFrame(parent) {
+  VariableView::VariableView(QWidget* parent) : QFrame(parent) {
     setFrameStyle(QFrame::Panel | QFrame::Sunken);
-    auto *layout = new QGridLayout(this);
+    auto* layout = new QGridLayout(this);
     layout->addWidget(new QLabel("Variable View"));
   }
 
-} // ldb::gui
+}// namespace ldb::gui

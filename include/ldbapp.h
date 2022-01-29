@@ -8,9 +8,8 @@ namespace ldb {
   public:
     LDBApp() = default;
 
-    static void run(int argc, char **argv);
+    static void run(int argc, char** argv);
 
   private:
   };
-}
-
+}// namespace ldb
