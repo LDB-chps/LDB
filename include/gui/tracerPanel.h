@@ -19,6 +19,11 @@ namespace ldb::gui {
   public slots:
 
     /**
+     * @brief Creates a dialog to select a process to start tracing.
+     */
+    void popupStartCommandDialog();
+
+    /**
      * @brief Attempt to start the command if no program is already running. Otherwise,
      * start a dialog to ask the user if he wants to stop the current program.
      * @param command The command to start
@@ -45,6 +50,13 @@ namespace ldb::gui {
      */
     void stopCommand() {}
 
+  signals:
+
+    void commandChanged();
+    void commandStarted();
+    void commandStopped();
+    void commandRaisedError();
+
   private:
     void setupToolbar(QGridLayout* layout);
 
@@ -52,9 +64,7 @@ namespace ldb::gui {
 
     void setupVariableView(QGridLayout* layout);
 
-    void setupTabbedPane(QGridLayout* layout);
-
-    void updateAll();
+    QTabWidget* setupTabbedPane();
 
     TracerToolBar* toolbar = nullptr;
     VariableView* variable_view = nullptr;

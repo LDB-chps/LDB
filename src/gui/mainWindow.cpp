@@ -8,8 +8,8 @@
 namespace ldb::gui {
   MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
     showMaximized();
-    setupMenuBar();
     setupTracerPanel();
+    setupMenuBar();
   }
 
   void MainWindow::setupMenuBar() {
@@ -17,6 +17,7 @@ namespace ldb::gui {
     // File menu for loading new program and quitting
     QMenu* file_menu = menu_bar->addMenu("File");
     QAction* load_action = file_menu->addAction("Load program");
+    connect(load_action, &QAction::triggered, tracer_panel, &TracerPanel::popupStartCommandDialog);
     QAction* quit_action = file_menu->addAction("Exit");
 
     // View menu, for showing/hiding components from the tracer panel
