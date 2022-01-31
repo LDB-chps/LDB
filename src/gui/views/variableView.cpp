@@ -9,7 +9,6 @@
 #include <QLabel>
 namespace ldb::gui {
   VariableView::VariableView(QWidget* parent) : QFrame(parent) {
-    setFrameStyle(QFrame::Panel | QFrame::Sunken);
     auto* layout = new QGridLayout(this);
     layout->addWidget(new QLabel("Variable View"));
   }

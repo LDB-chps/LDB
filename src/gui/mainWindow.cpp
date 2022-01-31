@@ -16,9 +16,11 @@ namespace ldb::gui {
     QMenuBar* menu_bar = new QMenuBar(this);
     // File menu for loading new program and quitting
     QMenu* file_menu = menu_bar->addMenu("File");
-    QAction* load_action = file_menu->addAction("Load program");
+    QAction* load_action =
+            file_menu->addAction(QIcon(":/icons/folder-open-fill.png"), "Start command");
     connect(load_action, &QAction::triggered, tracer_panel, &TracerPanel::popupStartCommandDialog);
     QAction* quit_action = file_menu->addAction("Exit");
+    connect(quit_action, &QAction::triggered, this, &QMainWindow::close);
 
     // View menu, for showing/hiding components from the tracer panel
     QMenu* view_menu = menu_bar->addMenu("View");

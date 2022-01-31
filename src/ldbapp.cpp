@@ -37,7 +37,7 @@ namespace ldb {
       tscl::logger("Starting command: " + command, tscl::Log::Information);
       main_window.startCommand(command, args);
     } else {
-      tscl::logger("To start, select a binary to trace using file > Load program",
+      tscl::logger("To start, select a binary to trace using File > Start command",
                    tscl::Log::Information);
     }
     // The stylesheet is in the resources

@@ -27,5 +27,14 @@ namespace ldb::gui {
 
     text_edit->setTextColor(QColor(color_map[log.level()]));
     text_edit->append(QString::fromStdString(ss.str()));
+    // Remove oldest lines if the text edit is overflowing
+    if (text_edit->document()->lineCount() > 500) {
+      QTextCursor cursor = text_edit->textCursor();
+      cursor.movePosition(QTextCursor::Start);
+      cursor.select(QTextCursor::BlockUnderCursor);
+      cursor.movePosition(QTextCursor::NextCharacter, QTextCursor::KeepAnchor);
+      cursor.removeSelectedText();
+    }
+    text_edit->ensureCursorVisible();
   }
 }// namespace ldb::gui

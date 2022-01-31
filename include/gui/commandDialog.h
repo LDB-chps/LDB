@@ -1,7 +1,8 @@
 #pragma once
 #include <QDialog>
-#include <QGridLayout>
 #include <QLineEdit>
+#include <QTextEdit>
+#include <QVBoxLayout>
 namespace ldb::gui {
   /*
    * @brief A dialog box for entering a command and its argument
@@ -34,9 +35,9 @@ namespace ldb::gui {
     void openFileDialog();
 
   private:
-    QGridLayout* layout;
+    QVBoxLayout* layout;
     QLineEdit* command;
-    QLineEdit* args;
+    QTextEdit* args;
   };
 
 }// namespace ldb::gui

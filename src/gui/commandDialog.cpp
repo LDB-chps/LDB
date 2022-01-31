@@ -4,52 +4,62 @@
 #include <QIcon>
 #include <QLabel>
 #include <QPushButton>
+#include <QVBoxLayout>
+
 
 namespace ldb::gui {
   CommandDialog::CommandDialog(QWidget* parent) : QDialog(parent) {
     setWindowTitle("Select a command");
 
-    layout = new QGridLayout;
+    layout = new QVBoxLayout;
     setLayout(layout);
+
+
+    // Inputs are added to a subwidget
+    auto* input_layout = new QGridLayout;
+    QWidget* input = new QWidget;
+    input->setLayout(input_layout);
+    layout->addWidget(input);
 
     // Setup command line edit and open folder button
     auto* label_command = new QLabel("Command: ");
-    layout->addWidget(label_command, 0, 0);
+    input_layout->addWidget(label_command, 0, 0);
     command = new QLineEdit();
-    layout->addWidget(command, 0, 1, 1, 2);
+    input_layout->addWidget(command, 0, 1, 1, 1);
     // Add a button for folder opening
     auto* open_folder = new QPushButton(QIcon(":/icons/folder-open-fill.png"), "");
     connect(open_folder, &QPushButton::clicked, this, &CommandDialog::openFileDialog);
-    layout->addWidget(open_folder, 0, 3);
+    input_layout->addWidget(open_folder, 0, 3, 1, 1, Qt::AlignRight);
 
     // Setup a line edit for command arguments
     auto* label_args = new QLabel("Arguments: ");
-    layout->addWidget(label_args, 1, 0);
-    args = new QLineEdit();
-    layout->addWidget(args, 1, 1, 1, 3);
+    input_layout->addWidget(label_args, 1, 0);
+    args = new QTextEdit();
+    input_layout->addWidget(args, 1, 1, 1, 1);
 
     // Line separator between input and confirmation buttons
     QFrame* line_separator = new QFrame();
     line_separator->setFrameShape(QFrame::HLine);
     line_separator->setFrameShadow(QFrame::Sunken);
-    layout->addWidget(line_separator, 2, 0, 1, 4);
+    layout->addStretch();
+    layout->addWidget(line_separator);
 
     // Add the buttons in a subwidget and add it to the layout
     // This improves the layout of the dialog
     QWidget* buttons = new QWidget;
     QHBoxLayout* buttons_layout = new QHBoxLayout;
     buttons->setLayout(buttons_layout);
-    layout->addWidget(buttons, 3, 0, 1, 4);
+    layout->addWidget(buttons);
 
     // Connect the exit and abort buttons to the slots provided by the parent class
-    auto* abort = new QPushButton("Abort");
-    connect(abort, &QPushButton::clicked, this, &CommandDialog::reject);
+    auto* button_cancel = new QPushButton("Cancel");
+    connect(button_cancel, &QPushButton::clicked, this, &CommandDialog::reject);
 
     auto* ok = new QPushButton(QIcon(":/icons/play-fill.png"), "Start");
     connect(ok, &QPushButton::clicked, this, &CommandDialog::accept);
     // We want buttons to be aligned to the right side of the dialog
     buttons_layout->addStretch();
-    buttons_layout->addWidget(abort);
+    buttons_layout->addWidget(button_cancel);
     buttons_layout->addWidget(ok);
   }
 
@@ -58,7 +68,7 @@ namespace ldb::gui {
   }
 
   QString CommandDialog::getArgs() const {
-    return args->text();
+    return args->toPlainText();
   }
 
   void CommandDialog::openFileDialog() {

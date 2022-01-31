@@ -4,10 +4,11 @@
 namespace ldb::gui {
   TracerToolBar::TracerToolBar(QWidget* parent) : QToolBar(parent) {
     // By default, icons are a bit too large, reduce them
-    setIconSize(QSize(16, 16));
+    setIconSize(QSize(20, 20));
 
     // Open a new program
-    action_open_folder = new QAction(QIcon(":/icons/folder-open-fill.png"), "Open folder");
+    action_open_folder = new QAction(QIcon(":/icons/folder-open-fill.png"), "Start command");
+    connect(action_open_folder, &QAction::triggered, this, &TracerToolBar::openCommand);
     addAction(action_open_folder);
     addSeparator();
 
@@ -16,19 +17,19 @@ namespace ldb::gui {
     addWidget(label_program_name);
 
     action_reset = new QAction(QIcon(":/icons/skip-back-fill.png"), "Reset");
-    action_reset->setEnabled(false);
+    // action_reset->setEnabled(false);
     addAction(action_reset);
 
     action_toggle_play = new QAction(QIcon(":/icons/play-fill.png"), "Play");
-    action_toggle_play->setEnabled(false);
+    // action_toggle_play->setEnabled(false);
     addAction(action_toggle_play);
 
     action_stop = new QAction(QIcon(":/icons/stop-fill.png"), "Stop");
-    action_stop->setEnabled(false);
+    // action_stop->setEnabled(false);
     addAction(action_stop);
 
     action_continue = new QAction(QIcon(":/icons/skip-forward-fill.png"), "Continue");
-    action_continue->setEnabled(false);
+    // action_continue->setEnabled(false);
     addAction(action_continue);
     addSeparator();
 

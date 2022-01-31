@@ -38,6 +38,7 @@ namespace ldb::gui {
     // Setup the main toolbar
     toolbar = new TracerToolBar(this);
     layout->addWidget(toolbar, 0, 0);
+    connect(toolbar, &TracerToolBar::openCommand, this, &TracerPanel::popupStartCommandDialog);
   }
 
   void TracerPanel::TracerPanel::setupCodeView(QGridLayout* layout) {
@@ -83,6 +84,7 @@ namespace ldb::gui {
     if (dialog->exec() == QDialog::Accepted) {
       auto command = dialog->getCommand();
       tscl::logger("Starting command '" + command.toStdString() + "'", tscl::Log::Information);
+      code_view->openFile(command);
     }
   }
 }// namespace ldb::gui

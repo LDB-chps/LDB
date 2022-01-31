@@ -16,6 +16,10 @@ namespace ldb::gui {
      */
     void update(ProcessTracer* tracer) {}
 
+  signals:
+    // Emitted when the open command button is clicked
+    void openCommand();
+
   private:
     QAction* action_open_folder;
     QAction* action_toggle_play;
