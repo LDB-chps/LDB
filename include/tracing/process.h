@@ -9,27 +9,7 @@ namespace ldb {
    */
   class Process {
   public:
-    /**
-     * @brief Construct a new Process handle associated with the given pid. Does not start the
-     * process.
-     * @param pid the pid to link to
-     */
-    explicit Process(pid_t pid);
-
-    /**
-     * @brief Process Handle are not copyable
-     */
-    Process(const Process&) = delete;
-
-    /**
-     * @brief Process Handle are not copyable
-     */
-    Process& operator=(const Process&) = delete;
-
-    Process(Process&&) = default;
-    Process& operator=(Process&&) = default;
-
-    bool isRunning();
+    enum class Status { None, Running, Exited, Killed, Dead, Stopped };
 
     /**
      * @brief Launch the command with its argument in a new process and return a Process handle to
@@ -40,8 +20,31 @@ namespace ldb {
      * @param args
      * @return
      */
-    static std::unique_ptr<Process> fromCommand(const std::string& command,
-                                                const std::string& args);
+    static std::unique_ptr<Process> fromCommand(const std::string& command, const std::string& args);
+
+    /**
+     * @brief Construct a new Process handle associated with the given pid. Does not start the
+     * process.
+     * @param pid the pid to link to
+     */
+    explicit Process(pid_t pid);
+
+    ~Process();
+
+    /**
+     * @brief Process Handle should not be copyable to avoid concurrent access
+     */
+    Process(const Process&) = delete;
+    Process& operator=(const Process&) = delete;
+
+    Process(Process&&) = default;
+    Process& operator=(Process&&) = default;
+
+    /**
+     * @brief Returns the current status of the process
+     * @return
+     */
+    Status getStatus();
 
     /**
      * @brief Signal the process to resume execution.
@@ -65,15 +68,9 @@ namespace ldb {
      * @brief Get the pid of the process. Does not mean the process is running
      * @return The pid of the process
      */
-    pid_t getPid() {
+    pid_t getPid() const {
       return pid;
     }
-
-    /**
-     * @brief Check if the process is running
-     * @return True if the process is running, false otherwise
-     */
-    bool isAlive();
 
     /**
      * @brief Wait for the process to exit or for a signal to raise.

@@ -9,8 +9,6 @@
 namespace ldb {
 
 
-  Process::Process(pid_t pid) : pid(pid) {}
-
   std::unique_ptr<Process> Process::fromCommand(const std::string& command,
                                                 const std::string& args) {
     auto res = std::make_unique<Process>(fork());
@@ -25,11 +23,24 @@ namespace ldb {
     return res;
   }
 
-  bool Process::isRunning() {
-    // Check the status of the process
+  Process::Process(pid_t pid) : pid(pid) {}
+
+  Process::~Process() {
+    if (pid != -1) return;
+
+    auto status = getStatus();
+    if (status == Status::Running or status == Status::Stopped) kill();
+  }
+
+  Process::Status Process::getStatus() {
     int status;
-    if (waitpid(pid, &status, WNOHANG) == -1) { return false; }
-    return WIFSTOPPED(status) == 0;
+    if (waitpid(pid, &status, 0) == -1) {
+      if (errno == ESRCH) { return Status::Dead; }
+    }
+    if (WIFEXITED(status)) { return Status::Exited; }
+    if (WIFSTOPPED(status)) { return Status::Stopped; }
+    if (WIFSIGNALED(status)) { return Status::Killed; }
+    return Status::Running;
   }
 
   bool Process::resume() {
@@ -46,14 +57,6 @@ namespace ldb {
       return true;
     }
     return false;
-  }
-
-  bool Process::isAlive() {
-    // The process may be waiting for us to sync up, so we try to wait for it
-    waitpid(pid, nullptr, WNOHANG);
-
-    // Send a kill signal and check errno for the "no such process" error
-    return ::kill(pid, 0) != -1 or errno == ESRCH;
   }
 
   void Process::wait() {
