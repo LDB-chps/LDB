@@ -4,7 +4,7 @@
 #include "process.h"
 #include <filesystem>
 #include <memory>
-#include <mutex>
+#include <shared_mutex>
 #include <thread>
 #include <vector>
 
@@ -22,14 +22,16 @@ namespace ldb {
    */
   class ProcessTracer {
   public:
+    ProcessTracer() = default;
+
     /**
      * @brief launch a new process and trace it
      * @param command the program to execute
      * @param args the args of the program
      * @return A tracer attached to the new process
      */
-    static std::unique_ptr<ProcessTracer> attackFromCommand(const std::string& command,
-                                                            std::vector<std::string>& args);
+    static std::unique_ptr<ProcessTracer> attachFromCommand(const std::string& command,
+                                                            std::string& args);
 
     /**
      * @brief Yield the current process registers values
@@ -80,10 +82,12 @@ namespace ldb {
     std::vector<std::string> getStackTrace();
 
   private:
+    std::string executable_path;
+
     /** A thread is created to handle the process
      * Therefore, a lock is used to avoid concurency
      */
-    std::mutex main_mutex;
+    std::shared_mutex main_mutex;
     std::unique_ptr<Process> process;
 
     // TODO: Implement a symbol table for address to name translation and vice-versa
@@ -91,15 +95,7 @@ namespace ldb {
     // line number. It should also allow one to search for a particular symbol type (i.e function,
     // variable, global variable, etc) std::unique_ptr<SymbolTable>
 
-    // True if the process is running
-    bool is_running;
-
-    // True if the process is suspended
-    bool is_suspended;
-
-    // True if the process is in a good state
-    // (i.e the program is running or suspended, and not segfaulted)
-    bool is_good;
+    bool has_debug_info;
   };
 
 }// namespace ldb

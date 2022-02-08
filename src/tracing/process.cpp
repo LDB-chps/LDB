@@ -11,15 +11,25 @@ namespace ldb {
 
   Process::Process(pid_t pid) : pid(pid) {}
 
-  Process Process::fromCommand(const std::string& command, const std::string& args) {
-    Process res(fork());
-    if (res.pid == 0) {
+  std::unique_ptr<Process> Process::fromCommand(const std::string& command,
+                                                const std::string& args) {
+    auto res = std::make_unique<Process>(fork());
+    if (res->getPid() == 0) {
       ptrace(PTRACE_TRACEME, 0, nullptr, nullptr);
       // Since we switch to a new process, no need to worry about this object state anymore
       execlp(command.c_str(), command.c_str(), args.c_str(), nullptr);
       exit(1);
     }
+
+    if (res->getPid() == -1) { throw std::runtime_error("Failed to fork"); }
     return res;
+  }
+
+  bool Process::isRunning() {
+    // Check the status of the process
+    int status;
+    if (waitpid(pid, &status, WNOHANG) == -1) { return false; }
+    return WIFSTOPPED(status) == 0;
   }
 
   bool Process::resume() {
@@ -31,7 +41,11 @@ namespace ldb {
   }
 
   bool Process::kill() {
-    return ptrace(PTRACE_KILL, pid, nullptr, nullptr) == 0;
+    if (::kill(pid, SIGKILL) == 0) {
+      waitpid(pid, nullptr, 0);
+      return true;
+    }
+    return false;
   }
 
   bool Process::isAlive() {
@@ -39,8 +53,7 @@ namespace ldb {
     waitpid(pid, nullptr, WNOHANG);
 
     // Send a kill signal and check errno for the "no such process" error
-    if (::kill(pid, 0) == -1 and errno != ESRCH) { return false; }
-    return true;
+    return ::kill(pid, 0) != -1 or errno == ESRCH;
   }
 
   void Process::wait() {

@@ -29,6 +29,8 @@ namespace ldb {
     Process(Process&&) = default;
     Process& operator=(Process&&) = default;
 
+    bool isRunning();
+
     /**
      * @brief Launch the command with its argument in a new process and return a Process handle to
      * it. The new process will automatically call ptrace() to attach to itself to the parent
@@ -38,7 +40,8 @@ namespace ldb {
      * @param args
      * @return
      */
-    static Process fromCommand(const std::string& command, const std::string& args);
+    static std::unique_ptr<Process> fromCommand(const std::string& command,
+                                                const std::string& args);
 
     /**
      * @brief Signal the process to resume execution.
