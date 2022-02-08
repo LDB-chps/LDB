@@ -7,10 +7,17 @@
 #include "variableView.h"
 #include <QGridLayout>
 #include <QLabel>
+
 namespace ldb::gui {
   VariableView::VariableView(QWidget* parent) : QFrame(parent) {
-    auto* layout = new QGridLayout(this);
-    layout->addWidget(new QLabel("Variable View"));
+    tabs = new QTabWidget(this);
+    variables = new QTableView;
+    variables->setSelectionBehavior(QAbstractItemView::SelectRows);
+    tabs->addTab(variables, "Variables");
+
+    registers = new QTableView;
+    registers->setSelectionBehavior(QAbstractItemView::SelectRows);
+    tabs->addTab(registers, "Registers");
   }
 
 }// namespace ldb::gui

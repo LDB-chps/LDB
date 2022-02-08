@@ -35,6 +35,5 @@ namespace ldb::gui {
 
     // Display section for current program
     addWidget(new QLabel("PID: "));
-    addWidget(new QLabel("Current file: "));
   }
 }// namespace ldb::gui

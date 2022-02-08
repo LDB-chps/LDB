@@ -16,6 +16,9 @@ namespace ldb::gui {
       return tracer_panel->startCommand(command, args);
     }
 
+  public slots:
+    void startAboutPopup();
+
   private:
     void setupMenuBar();
 

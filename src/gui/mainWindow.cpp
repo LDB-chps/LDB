@@ -2,6 +2,7 @@
 #include <QFile>
 #include <QGridLayout>
 #include <QMenuBar>
+#include <QMessageBox>
 #include <QProgressBar>
 #include <QWidget>
 
@@ -46,11 +47,20 @@ namespace ldb::gui {
 
     auto* action_about = new QAction("About");
     menu_bar->addAction(action_about);
+    connect(action_about, &QAction::triggered, this, &MainWindow::startAboutPopup);
 
     auto* action_help = new QAction("Help");
     menu_bar->addAction(action_help);
 
     setMenuBar(menu_bar);
+  }
+
+  void MainWindow::startAboutPopup() {
+    QMessageBox::about(this, "About",
+                       "LDB is a graphical debugger project.\nThis project was made for the "
+                       "AISE course for the M1CHPS at the University of Versailles "
+                       "St-Quentin.\n\nAuthors: Ugo "
+                       "Battiston, Mathys Jam");
   }
 
   void MainWindow::setupTracerPanel() {
