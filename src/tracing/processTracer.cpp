@@ -1,65 +1,59 @@
-
 #include "processTracer.h"
+#include "registersSnapshot.h"
 
 
 namespace ldb {
 
-  std::unique_ptr<ProcessTracer> ProcessTracer::attachFromCommand(const std::string& command,
-                                                                  std::string& args) {
-    auto res = std::make_unique<ProcessTracer>();
-    res->process = Process::fromCommand(command, args);
-    res->executable_path = command;
+  std::unique_ptr<ProcessTracer> ProcessTracer::fromCommand(const std::string& command,
+                                                            const std::string& args) {
+    auto process = Process::fromCommand(command, args);
+    if (not process) { return nullptr; }
 
-    return res;
+    return std::make_unique<ProcessTracer>(std::move(*process), command);
   }
 
-  std::vector<std::string> ProcessTracer::getRegistersValues() {
+  ProcessTracer::ProcessTracer(Process&& process, const std::string& executable)
+      : process(std::move(process)), executable_path(executable) {;
+  }
+
+  std::unique_ptr<RegistersSnapshot> ProcessTracer::getRegistersSnapshot() {
     std::shared_lock<std::shared_mutex> lock(main_mutex);
-    if (process->isRunning()) { return {}; }
+    if (process.getStatus() != Process::Status::Stopped) { return {}; }
 
     return {};
   }
 
-  std::vector<std::string> ProcessTracer::getGlobalVariablesValues() {
-    std::shared_lock<std::shared_mutex> lock(main_mutex);
-    if (process->isRunning()) { return {}; }
-
-    return {};
+  std::string ProcessTracer::getExecutable() {
+    // The executable_path is immovable, so we can safely return a copy without acquiring the mutex
+    return executable_path;
   }
 
-  std::filesystem::path ProcessTracer::getExecutablePath() {
-    if (process->isRunning()) { return ""; }
-
-    return "";
-  }
-
-  std::filesystem::path ProcessTracer::getCurrentFilePath() {
+  std::string ProcessTracer::getCurrentFile() {
     std::shared_lock<std::shared_mutex> lock(main_mutex);
-    if (process->isRunning()) { return ""; }
+    if (process.getStatus() != Process::Status::Stopped) { return {}; }
 
     return "";
   }
 
   long ProcessTracer::getCurrentLineNumber() {
     std::shared_lock<std::shared_mutex> lock(main_mutex);
-    if (process->isRunning()) { return -1; }
+    if (process.getStatus() != Process::Status::Stopped) { return {}; }
 
     return -1;
   }
 
   std::string ProcessTracer::getCurrentFunctionName() {
     std::shared_lock<std::shared_mutex> lock(main_mutex);
-    if (process->isRunning()) { return ""; }
-
+    if (process.getStatus() != Process::Status::Stopped) { return {}; }
     return "";
   }
 
-  std::vector<std::string> ProcessTracer::getStackTrace() {
+  /*
+  std::unique_ptr<StackTrace> ProcessTracer::getStackTrace() {
     std::shared_lock<std::shared_mutex> lock(main_mutex);
-    if (process->isRunning()) { return {}; }
-
+    if (process.getStatus() != Process::Status::Stopped) { return {}; }
     return {};
   }
-
+  */
 
 }// namespace ldb

@@ -13,9 +13,12 @@ namespace ldb {
                                                 const std::string& args) {
     auto res = std::make_unique<Process>(fork());
     if (res->getPid() == 0) {
+      std::cout << "Child process forked !" << std::endl;
       ptrace(PTRACE_TRACEME, 0, nullptr, nullptr);
+      std::cout << "Child process now traced !" << std::endl;
       // Since we switch to a new process, no need to worry about this object state anymore
       execlp(command.c_str(), command.c_str(), args.c_str(), nullptr);
+      std::cout << "Child process exiting !" << std::endl;
       exit(1);
     }
 

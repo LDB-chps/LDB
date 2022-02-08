@@ -73,7 +73,7 @@ namespace ldb::gui {
 
   void CommandDialog::openFileDialog() {
     // Open a file dialog for the user to select a command
-    QString file_name = QFileDialog::getOpenFileName(this, "Open file", "", "All files (*.*)");
+    QString file_name = QFileDialog::getOpenFileName(this, "Open file");
     if (!file_name.isEmpty()) { command->setText(file_name); }
   }
 }// namespace ldb::gui

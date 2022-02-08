@@ -1,8 +1,9 @@
-#include <iostream>
 #include "ldbapp.h"
+#include <iostream>
 
 int main(int argc, char** argv) {
-    ldb::LDBApp app;
-    app.run(argc, argv);
-    return 0;
+  std::cout << "Hello, World!" << std::endl;
+  ldb::LDBApp app;
+  app.run(argc, argv);
+  return 0;
 }

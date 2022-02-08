@@ -52,10 +52,10 @@ namespace ldb::gui {
 
   signals:
 
-    void commandChanged();
-    void commandStarted();
-    void commandStopped();
-    void commandRaisedError();
+    void tracingUpdate();
+    void tracingStarted();
+    void tracingStopped();
+    void tracingRaisedError();
 
   private:
     void setupToolbar(QGridLayout* layout);

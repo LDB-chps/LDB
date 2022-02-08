@@ -81,10 +81,25 @@ namespace ldb::gui {
   void TracerPanel::popupStartCommandDialog() {
     auto* dialog = new CommandDialog(this);
     dialog->setModal(true);
-    if (dialog->exec() == QDialog::Accepted) {
-      auto command = dialog->getCommand();
-      tscl::logger("Starting command '" + command.toStdString() + "'", tscl::Log::Information);
-      code_view->openFile(command);
+    if (dialog->exec() != QDialog::Accepted) return;
+
+    try {
+      tscl::logger("Starting executable: " + dialog->getCommand().toStdString(),
+                   tscl::Log::Information);
+      process_tracer = ProcessTracer::fromCommand(dialog->getCommand().toStdString(),
+                                                  dialog->getArgs().toStdString());
+      if (not process_tracer) {
+        tscl::logger("Failed to start executable", tscl::Log::Error);
+        return;
+      }
+      auto status = process_tracer->getProcessStatus();
+      emit tracingStarted();
+      emit tracingUpdate();
+    } catch (const std::exception& e) {
+      tscl::logger("Failed to start command: " + dialog->getCommand().toStdString() + ":",
+                   tscl::Log::Error);
+      tscl::logger(e.what(), tscl::Log::Error);
+      return;
     }
   }
 }// namespace ldb::gui
