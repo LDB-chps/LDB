@@ -23,3 +23,4 @@ qt_add_library(tracing STATIC
         SymbolsTable.cpp ${CURRENT_INCLUDE_DIR}/SymbolsTable.h
         )
 target_include_directories(tracing PUBLIC ${CURRENT_INCLUDE_DIR})
+target_link_libraries(tracing PUBLIC TBB::tbb Threads::Threads)

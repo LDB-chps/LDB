@@ -1,10 +1,14 @@
 cmake_minimum_required(VERSION 3.17)
 project(LDB VERSION 0.0.1 LANGUAGES C CXX)
 
+set(CMAKE_CXX_STANDARD 20)
+
 # Alias to simplify the build down the road
 set(INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 find_package(Qt6 REQUIRED COMPONENTS Widgets Charts)
+find_package(Threads REQUIRED)
+find_package(TBB REQUIRED)
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 

@@ -46,11 +46,15 @@ namespace ldb {
 
     for (auto& list : symbols_list) {
       for (auto& sym : *list) {
-        if (sym.getType() == SymbolType::kFunction and sym.getAddress() < addr and
+        if (sym.getAddress() < addr and
             (closest == nullptr || sym.getAddress() < closest->getAddress()))
           closest = &sym;
       }
     }
+
+    // This could indicate an unresolved symbol
+    if (closest->getAddress() == 0) { return nullptr; }
+
     return closest;
   }
 
@@ -59,12 +63,20 @@ namespace ldb {
 
     for (auto& list : symbols_list) {
       for (auto& sym : *list) {
-        if (sym.getType() == SymbolType::kFunction and sym.getAddress() < addr and
+        if (sym.getAddress() < addr and
             (closest == nullptr || sym.getAddress() < closest->getAddress()))
           closest = &sym;
       }
     }
     return closest;
+  }
+
+
+  std::ostream& operator<<(std::ostream& os, const SymbolsTable& table) {
+    for (auto& list : table.symbols_list) {
+      for (auto& sym : *list) { os << sym << std::endl; }
+    }
+    return os;
   }
 
 }// namespace ldb

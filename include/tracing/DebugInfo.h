@@ -13,14 +13,21 @@ namespace ldb {
     friend class DebugInfoFactory;
 
   public:
+
+
     DebugInfo(const DebugInfo& other) = delete;
     DebugInfo& operator=(const DebugInfo& other) = delete;
 
-    const FrameTable& getFrameInfos() const;
-    const SymbolsTable& getSymbolsTable() const;
+    const FrameTable& getFrameInfos() const {
+      return frame_infos;
+    }
+
+    const SymbolsTable& getSymbolsTable() const {
+      return symbols_table;
+    }
 
   private:
-    DebugInfo();
+    DebugInfo() = default;
 
     std::filesystem::path executable_path;
 

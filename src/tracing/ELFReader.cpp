@@ -1,4 +1,6 @@
 #include "ELFReader.h"
+#include <algorithm>
+#include <execution>
 
 
 namespace ldb {
@@ -13,16 +15,17 @@ namespace ldb {
     auto string_table = parseStringTable(file, *header);
     if (not string_table) return nullptr;
 
-    auto section = parseSections(file, *header, *string_table);
-    auto symbol_list = parseSymbols(file, *header, *string_table);
+    std::vector<Section> sections = parseSections(file, *header, *string_table);
 
-    elfFile->sections = std::move(section);
+    auto symbol_list = parseSymbols(file, sections);
+
+    elfFile->sections = std::move(sections);
     elfFile->symbols = std::move(symbol_list);
 
     return elfFile;
   }
 
-  std::optional<Elf64_Ehdr> parseHeader(std::istream& stream) {
+  std::optional<Elf64_Ehdr> ELFReader::parseHeader(std::istream& stream) {
     stream.seekg(0);
 
     Elf64_Ehdr header;
@@ -50,8 +53,8 @@ namespace ldb {
   }
 
 
-  std::vector<Section> parseSections(std::istream& stream, const Elf64_Ehdr& header,
-                                     const std::string& string_table) {
+  std::vector<Section> ELFReader::parseSections(std::istream& stream, const Elf64_Ehdr& header,
+                                                const std::string& string_table) {
     std::vector<Section> sections;
     sections.reserve(header.e_shnum);
     stream.seekg(header.e_shoff);
@@ -62,30 +65,61 @@ namespace ldb {
         throw std::runtime_error("Failed to read section header");
       }
       std::string name = std::string(string_table.c_str() + section_header.sh_name);
-      SectionType type = SectionType::kUnknown;
+      auto type = static_cast<SectionType>(section_header.sh_type);
 
-      sections.emplace_back(type, name, section_header.sh_offset, section_header.sh_addr,
-                            section_header.sh_size);
+      std::cout << name << " section_offset: " << section_header.sh_offset
+                << " hdr_offset: " << stream.tellg() << " vaddr: " << section_header.sh_addr
+                << std::endl;
+
+      sections.emplace_back(type, name, i * sizeof(Elf64_Shdr) + header.e_shoff,
+                            section_header.sh_offset, section_header.sh_size,
+                            section_header.sh_addr);
     }
     return sections;
   }
 
-  std::shared_ptr<SymbolList> parseSymbols(std::istream& stream, const Elf64_Shdr& sym_section,
-                                           const std::string& String_table) {
+  std::shared_ptr<SymbolList> ELFReader::parseSymbols(std::istream& stream,
+                                                      const std::vector<Section>& sections) {
     auto symbols = std::make_unique<SymbolList>();
-    stream.seekg(sym_section.sh_offset);
 
-    for (size_t i = 0; i < sym_section.sh_size / sizeof(Elf64_Sym); i++) {
-      Elf64_Sym sym;
+    for (auto& sec : sections) {
+      if (sec.getType() == SectionType::kSymTab) {
+        Elf64_Shdr section_header;
+        stream.seekg(sec.getHdrOffset());
+        if (not stream.read(reinterpret_cast<char*>(&section_header), sizeof(Elf64_Shdr))) {
+          throw std::runtime_error("Failed to read section header");
+        }
 
-      if (not stream.read(reinterpret_cast<char*>(&sym), sizeof(Elf64_Sym))) {
-        throw std::runtime_error("Failed to read symbol");
+
+        // Symbol tables uses a different string table than the other sections
+        std::string symbol_str_table;
+        symbol_str_table.resize(sections[section_header.sh_link].getSize());
+        stream.seekg(sections[section_header.sh_link].getSectionOffset());
+
+        if (not stream.read(symbol_str_table.data(), sections[section_header.sh_link].getSize())) {
+          throw std::runtime_error("Failed to read symbol string table");
+        }
+
+        // Jump to the beginning of the symbol table
+        stream.seekg(sec.getSectionOffset());
+        size_t n_sym = sec.getSize() / sizeof(Elf64_Shdr);
+
+        for (size_t i = 0; i < n_sym; i++) {
+          Elf64_Sym sym;
+
+          if (not stream.read(reinterpret_cast<char*>(&sym), sizeof(Elf64_Sym))) {
+            throw std::runtime_error("Failed to read symbol");
+          }
+
+          // if (ELF64_ST_TYPE(sym.st_info) != STT_FUNC) { continue; }
+
+          std::string name = std::string(symbol_str_table.c_str() + sym.st_name);
+
+          symbols->emplace_back(sym.st_value, name, std::nullopt);
+        }
       }
-
-      std::string name = std::string(String_table.c_str() + sym.st_name);
-      SymbolType type = SymbolType::kUnknown;
-      symbols->emplace_back(type, sym.st_value, name, std::nullopt);
     }
+
     return symbols;
   }
 }// namespace ldb

@@ -14,6 +14,9 @@ namespace ldb {
    */
   class SymbolsTable {
   public:
+
+    friend std::ostream& operator<<(std::ostream& os, const SymbolsTable& table);
+
     /**
      * @brief Lookup the symbol of given name in the table
      * @param name The name of the symbol to lookup
@@ -62,5 +65,7 @@ namespace ldb {
   private:
     std::vector<std::shared_ptr<SymbolList>> symbols_list;
   };
+
+
 
 }// namespace ldb

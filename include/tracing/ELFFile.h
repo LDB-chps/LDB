@@ -3,6 +3,7 @@
 #include "SymbolList.h"
 #include <filesystem>
 #include <memory>
+#include <utility>
 #include <vector>
 
 namespace ldb {
@@ -63,7 +64,7 @@ namespace ldb {
 
 
   private:
-    ELFFile(std::filesystem::path elf_path);
+    ELFFile(std::filesystem::path elf_path) : file_path(std::move(elf_path)) {}
 
     std::filesystem::path file_path;
     std::vector<Section> sections;

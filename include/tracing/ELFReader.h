@@ -19,8 +19,8 @@ namespace ldb {
     static std::vector<Section> parseSections(std::istream& stream, const Elf64_Ehdr& header,
                                               const std::string& String_table);
 
-    static std::shared_ptr<SymbolList> parseSymbols(std::istream& stream, const Elf64_Ehdr& header,
-                                                    const std::string& String_table);
+    static std::shared_ptr<SymbolList> parseSymbols(std::istream& stream,
+                                                    const std::vector<Section>& header);
   };
 
 }// namespace ldb
