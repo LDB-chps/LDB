@@ -22,15 +22,9 @@ namespace ldb {
     if (not elf_file) return false;
 
     // Append the symbols to the SymbolsTable
-    auto& symbols = elf_file.getSymbols();
+    auto& symbols = elf_file->getSymbols();
     if (relocation_base != 0) symbols.relocate(relocation_base);
     debug_info.symbols_table.join(symbols);
-
-
-    // Append the frame infos to the frame table
-    auto& frame_infos = elf_file.getFrameInfos();
-    if (relocation_base != 0) frame_infos.relocate(relocation_base);
-    debug_info.frame_infos.join(frame_infos);
 
     return true;
   }

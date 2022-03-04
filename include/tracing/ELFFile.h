@@ -1,5 +1,6 @@
 #pragma once
 #include "Section.h"
+#include "SymbolList.h"
 #include <filesystem>
 #include <memory>
 #include <vector>
