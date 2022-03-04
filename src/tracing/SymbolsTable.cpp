@@ -41,6 +41,19 @@ namespace ldb {
     return nullptr;
   }
 
+  Symbol* SymbolsTable::findClosestFunction(Elf64_Addr addr) {
+    Symbol* closest = nullptr;
+
+    for (auto& list : symbols_list) {
+      for (auto& sym : *list) {
+        if (sym.getType() == SymbolType::kFunction and sym.getAddress() < addr and
+            (closest == nullptr || sym.getAddress() < closest->getAddress()))
+          closest = &sym;
+      }
+    }
+    return closest;
+  }
+
   const Symbol* SymbolsTable::findClosestFunction(Elf64_Addr addr) const {
     const Symbol* closest = nullptr;
 

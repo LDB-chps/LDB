@@ -6,6 +6,9 @@
 
 namespace ldb {
 
+  /**
+   * @brief Enumeration of supported Symbol types
+   */
   enum class SymbolType { kFunction, kUnknown };
 
   /**

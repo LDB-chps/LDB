@@ -22,8 +22,6 @@ public:
   std::unique_ptr<FrameTable> read(DebugInfo& elf_file, Section& eh_frame_section);
 
 private:
-
-
 };
 
 }

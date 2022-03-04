@@ -7,7 +7,6 @@ namespace ldb {
 
     enum class TokenType { kUndefined, kCIE, kFDE, kTerminator };
 
-
     struct Token {
 
       size_t length = 0;
@@ -45,12 +44,14 @@ namespace ldb {
         res.type = TokenType::kUndefined;
         return res;
       }
+      return res;
     }
   }// namespace
 
   std::unique_ptr<FrameTable> EHFrameReader::read(DebugInfo& elf_file, Section& eh_frame_section) {
-    if (eh_frame_section.getType() != Section::kElf or eh_frame_section.getName() != ".eh_frame") {
-      return nullptr;
+    /*
+     * if (eh_frame_section.getType() != SectionType::kElf or eh_frame_section.getName() !=
+    ".eh_frame") { return nullptr;
     }
 
     eh_frame = std::make_unique<FrameTable>();
@@ -86,9 +87,10 @@ namespace ldb {
     }
 
     if (not done or error) return nullptr;
-    return eh_frame;
+    return eh_frame; */
+    return nullptr;
   }
-
+  /*
   bool EHFrameReader::readCIE(Token token, std::istream stream) {
     auto buffer = std::make_unique<char>(token.length);
     stream.read(buffer.get(), token.length);
@@ -101,5 +103,5 @@ namespace ldb {
     stream.read(buffer.get(), token.length);
 
     std::cout << "Found a FDE !" << std::endl;
-  }
-} // namespace ldb
+  } */
+}// namespace ldb

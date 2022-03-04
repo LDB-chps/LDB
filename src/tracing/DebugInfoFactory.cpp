@@ -16,14 +16,14 @@ namespace ldb {
   }
 
   bool DebugInfoFactory::parseElf(const std::filesystem::path& elf_path, DebugInfo& debug_info,
-                                  pid_t pid, size_t relocation_base) {
+                                  pid_t pid, Elf64_Addr relocation_base) {
     auto elf_file = ELFReader::read(elf_path, pid);
 
     if (not elf_file) return false;
 
     // Append the symbols to the SymbolsTable
-    auto& symbols = elf_file->getSymbols();
-    if (relocation_base != 0) symbols.relocate(relocation_base);
+    auto symbols = elf_file->getSymbols();
+    if (relocation_base != 0) symbols->relocate(relocation_base);
     debug_info.symbols_table.join(symbols);
 
     return true;
