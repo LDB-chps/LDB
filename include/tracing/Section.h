@@ -4,9 +4,11 @@
 namespace ldb {
   enum class SectionType { kUnknown, kElf, kDwarf };
 
+  class ELFFile;
+
   class Section {
   public:
-    Section(SectionType type, std::string name, size_t file_offset);
+    Section(ELFFile* parent, SectionType type, std::string name, size_t file_offset);
 
     SectionType getType() const {
       return type;

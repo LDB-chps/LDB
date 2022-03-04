@@ -32,10 +32,6 @@ namespace ldb {
     if (relocation_base != 0) frame_infos.relocate(relocation_base);
     debug_info.frame_infos.join(frame_infos);
 
-    for (auto& entry : elf_file.getDynamicEntries()) {
-      parseElf(entry.getPath(), debug_info, entry.getAddress());
-    }
-
     return true;
   }
 }// namespace ldb
