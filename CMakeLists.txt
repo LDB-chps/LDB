@@ -9,6 +9,8 @@ set(INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 find_package(Qt6 REQUIRED COMPONENTS Widgets Charts)
 find_package(Threads REQUIRED)
 find_package(TBB REQUIRED)
+find_package(Boost REQUIRED)
+
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 

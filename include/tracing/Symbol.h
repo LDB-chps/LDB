@@ -24,7 +24,6 @@ namespace ldb {
     Symbol(Elf64_Addr addr, std::string name, std::optional<std::filesystem::path> file)
         : addr(addr), name(name), file(file) {}
 
-
     /**
      * @brief Relocate this symbol to a new address
      * @param base The base address for the relocation

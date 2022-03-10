@@ -1,7 +1,7 @@
 #pragma once
 #include "FrameTable.h"
 #include "Section.h"
-#include "SymbolsTable.h"
+#include "SymbolTable.h"
 #include <elf.h>
 #include <iostream>
 #include <memory>
@@ -10,7 +10,7 @@
 
 namespace ldb {
   class DebugInfo {
-    friend class DebugInfoFactory;
+    friend class ELFReader;
 
   public:
 
@@ -22,7 +22,7 @@ namespace ldb {
       return frame_infos;
     }
 
-    const SymbolsTable& getSymbolsTable() const {
+    const SymbolTable& getSymbolsTable() const {
       return symbols_table;
     }
 
@@ -32,7 +32,7 @@ namespace ldb {
     std::filesystem::path executable_path;
 
     FrameTable frame_infos;
-    SymbolsTable symbols_table;
+    SymbolTable symbols_table;
   };
 
 }// namespace ldb

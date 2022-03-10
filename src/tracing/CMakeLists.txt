@@ -6,10 +6,8 @@ qt_add_library(tracing STATIC
         registersSnapshot.cpp ${CURRENT_INCLUDE_DIR}/registersSnapshot.h
 
         DebugInfo.cpp ${CURRENT_INCLUDE_DIR}/DebugInfo.h
-        DebugInfoFactory.cpp ${CURRENT_INCLUDE_DIR}/DebugInfoFactory.h
 
         # Elf related
-        ELFFile.cpp ${CURRENT_INCLUDE_DIR}/ELFFile.h
         ELFReader.cpp ${CURRENT_INCLUDE_DIR}/ELFReader.h
 
         Section.cpp ${CURRENT_INCLUDE_DIR}/Section.h
@@ -19,8 +17,7 @@ qt_add_library(tracing STATIC
         FrameTable.cpp ${CURRENT_INCLUDE_DIR}/FrameTable.h
 
         Symbol.cpp ${CURRENT_INCLUDE_DIR}/Symbol.h
-        SymbolList.cpp ${CURRENT_INCLUDE_DIR}/SymbolList.h
-        SymbolsTable.cpp ${CURRENT_INCLUDE_DIR}/SymbolsTable.h
+        SymbolTable.cpp ${CURRENT_INCLUDE_DIR}/SymbolTable.h
         )
 target_include_directories(tracing PUBLIC ${CURRENT_INCLUDE_DIR})
 target_link_libraries(tracing PUBLIC TBB::tbb Threads::Threads)
