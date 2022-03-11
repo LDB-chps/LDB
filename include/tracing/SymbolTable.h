@@ -41,6 +41,8 @@ namespace ldb {
     const Symbol* findClosestFunction(Elf64_Addr addr) const;
 
     void join(std::unique_ptr<SymbolTable>&& other) {
+      if (other == nullptr)
+        return;
       SymbolTable* ptr = nullptr;
       for (ptr = this; ptr->next != nullptr; ptr = ptr->next.get())
         ;
