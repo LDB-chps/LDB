@@ -1,5 +1,6 @@
 #pragma once
 
+#include "tracerView.h"
 #include <QLabel>
 #include <QPlainTextEdit>
 #include <QVBoxLayout>

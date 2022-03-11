@@ -37,7 +37,7 @@ namespace ldb {
 
   Process::Status Process::getStatus() {
     int status;
-    if (waitpid(pid, &status, 0) == -1) {
+    if (waitpid(pid, &status, WNOHANG) == -1) {
       if (errno == ESRCH) { return Status::Dead; }
     }
     if (WIFEXITED(status)) { return Status::Exited; }

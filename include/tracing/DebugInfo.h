@@ -1,5 +1,4 @@
 #pragma once
-#include "FrameTable.h"
 #include "Section.h"
 #include "SymbolTable.h"
 #include <elf.h>
@@ -11,16 +10,11 @@
 namespace ldb {
   class DebugInfo {
     friend class ELFReader;
-
   public:
 
 
     DebugInfo(const DebugInfo& other) = delete;
     DebugInfo& operator=(const DebugInfo& other) = delete;
-
-    const FrameTable& getFrameInfos() const {
-      return frame_infos;
-    }
 
     const SymbolTable& getSymbolsTable() const {
       return symbols_table;
@@ -30,8 +24,6 @@ namespace ldb {
     DebugInfo() = default;
 
     std::filesystem::path executable_path;
-
-    FrameTable frame_infos;
     SymbolTable symbols_table;
   };
 

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "tracerView.h"
 #include <QLabel>
 #include <QToolBar>
 #include <processTracer.h>

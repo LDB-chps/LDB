@@ -38,7 +38,7 @@ namespace ldb::gui {
     // Setup the main toolbar
     toolbar = new TracerToolBar(this);
     layout->addWidget(toolbar, 0, 0);
-    connect(toolbar, &TracerToolBar::openCommand, this, &TracerPanel::popupStartCommandDialog);
+    connect(toolbar, &TracerToolBar::openCommand, this, &TracerPanel::displayCommandDialog);
   }
 
   void TracerPanel::TracerPanel::setupCodeView(QGridLayout* layout) {
@@ -78,7 +78,7 @@ namespace ldb::gui {
     return stacked_pane;
   }
 
-  void TracerPanel::popupStartCommandDialog() {
+  void TracerPanel::displayCommandDialog() {
     auto* dialog = new CommandDialog(this);
     dialog->setModal(true);
     if (dialog->exec() != QDialog::Accepted) return;
@@ -93,8 +93,8 @@ namespace ldb::gui {
         return;
       }
       auto status = process_tracer->getProcessStatus();
-      emit tracingStarted();
-      emit tracingUpdate();
+      emit executionStarted();
+      emit tracerUpdated();
     } catch (const std::exception& e) {
       tscl::logger("Failed to start command: " + dialog->getCommand().toStdString() + ":",
                    tscl::Log::Error);

@@ -20,7 +20,7 @@ namespace ldb {
     std::shared_lock<std::shared_mutex> lock(main_mutex);
     if (process.getStatus() != Process::Status::Stopped) { return {}; }
 
-    return {};
+    return std::make_unique<RegistersSnapshot>(process);
   }
 
   std::string ProcessTracer::getExecutable() {

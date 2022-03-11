@@ -7,4 +7,4 @@ qt_add_library(views
         codeView.cpp ${CURRENT_INCLUDE_DIR}/codeView.h
         )
 target_link_libraries(views PUBLIC tracing Qt6::Core Qt6::Gui Qt6::Widgets)
-target_include_directories(views PUBLIC ${CURRENT_INCLUDE_DIR})
+target_include_directories(views PUBLIC ${INCLUDE_DIR} ${CURRENT_INCLUDE_DIR})

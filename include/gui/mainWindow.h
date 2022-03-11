@@ -13,7 +13,7 @@ namespace ldb::gui {
 
     // TODO: implement me !
     bool startCommand(const std::string& command, const std::vector<std::string>& args) {
-      return tracer_panel->startCommand(command, args);
+      return tracer_panel->startExecution(command, args);
     }
 
   public slots:

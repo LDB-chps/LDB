@@ -16,12 +16,16 @@ namespace ldb::gui {
   public:
     explicit TracerPanel(QWidget* parent = nullptr);
 
+    ProcessTracer* getTracer() {
+      return process_tracer.get();
+    }
+
   public slots:
 
     /**
      * @brief Creates a dialog to select a process to start tracing.
      */
-    void popupStartCommandDialog();
+    void displayCommandDialog();
 
     /**
      * @brief Attempt to start the command if no program is already running. Otherwise,
@@ -29,35 +33,37 @@ namespace ldb::gui {
      * @param command The command to start
      * @param args The arguments to pass to the command
      */
-    void maybeStartCommand(const std::string& command, const std::vector<std::string>& args) {}
+    void maybeStartExecution(const std::string& command, const std::vector<std::string>& args) {}
 
     /**
      * @brief Start a new program, killing the current one if any.
      * @param command The command to start
      * @param args The arguments to pass to the command
      */
-    bool startCommand(const std::string& command, const std::vector<std::string>& args) {
+    bool startExecution(const std::string& command, const std::vector<std::string>& args) {
       return true;
     }
 
     /**
      * @brief Popup a dialog to ask the user if he wants to stop the current program if any.
      */
-    void maybeStopCommand() {}
+    void maybeEndExecution() {}
 
     /**
      * @brief Stop the current program if any.
      */
-    void stopCommand() {}
+    void endExecution() {}
 
   signals:
 
-    void tracingUpdate();
-    void tracingStarted();
-    void tracingStopped();
-    void tracingRaisedError();
+    void tracerUpdated();
+    void executionStarted();
+    void executionEnded();
+    void tracerRaisedError();
 
   private:
+    std::unique_ptr<ProcessTracer> process_tracer;
+
     void setupToolbar(QGridLayout* layout);
 
     void setupCodeView(QGridLayout* layout);
@@ -70,9 +76,5 @@ namespace ldb::gui {
     VariableView* variable_view = nullptr;
     StackTraceView* stack_trace_view = nullptr;
     CodeView* code_view = nullptr;
-
-    /*
-    std::unique_ptr<Process> command_process; */
-    std::unique_ptr<ProcessTracer> process_tracer;
   };
 }// namespace ldb::gui

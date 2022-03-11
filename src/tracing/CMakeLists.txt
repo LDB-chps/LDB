@@ -11,10 +11,6 @@ qt_add_library(tracing STATIC
         ELFReader.cpp ${CURRENT_INCLUDE_DIR}/ELFReader.h
 
         Section.cpp ${CURRENT_INCLUDE_DIR}/Section.h
-        EHFrameReader.cpp ${CURRENT_INCLUDE_DIR}/EHFrameReader.h
-
-        FrameList.cpp ${CURRENT_INCLUDE_DIR}/FrameList.h
-        FrameTable.cpp ${CURRENT_INCLUDE_DIR}/FrameTable.h
 
         Symbol.cpp ${CURRENT_INCLUDE_DIR}/Symbol.h
         SymbolTable.cpp ${CURRENT_INCLUDE_DIR}/SymbolTable.h

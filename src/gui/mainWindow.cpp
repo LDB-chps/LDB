@@ -19,7 +19,7 @@ namespace ldb::gui {
     QMenu* file_menu = menu_bar->addMenu("File");
     QAction* load_action =
             file_menu->addAction(QIcon(":/icons/folder-open-fill.png"), "Start command");
-    connect(load_action, &QAction::triggered, tracer_panel, &TracerPanel::popupStartCommandDialog);
+    connect(load_action, &QAction::triggered, tracer_panel, &TracerPanel::displayCommandDialog);
     QAction* quit_action = file_menu->addAction("Exit");
     connect(quit_action, &QAction::triggered, this, &QMainWindow::close);
 

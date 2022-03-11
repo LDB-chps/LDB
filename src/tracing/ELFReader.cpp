@@ -87,6 +87,11 @@ namespace ldb {
     local_symbol_table->join(std::move(dynamic_symbol_table));
 
     res->symbols_table = std::move(*local_symbol_table);
+
+    // Parse dwarf
+    // populateDwarf(fd, res, sections, pid);
+
+
     return res;
   }
 
