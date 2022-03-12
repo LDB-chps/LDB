@@ -4,6 +4,7 @@
 #include <fstream>
 #include <iostream>
 #include <memory>
+#include "DwarfReader.h"
 
 namespace ldb {
 

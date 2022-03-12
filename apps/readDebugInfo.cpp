@@ -8,6 +8,6 @@ int main(int argc, char* argv[]) {
   }
 
   auto infos = ldb::ELFReader::read(argv[1], std::atoi(argv[2]));
-  std::cout << infos->getSymbolsTable() << std::endl;
+  //std::cout << infos->getSymbolsTable() << std::endl;
   return 0;
 }
