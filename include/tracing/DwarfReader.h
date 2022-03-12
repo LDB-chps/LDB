@@ -4,10 +4,10 @@
 #include <iostream>
 #include <libdwarf/dwarf.h>
 #include <libdwarf/libdwarf.h>
+#include <map>
 #include <sstream>
 #include <string>
 #include <vector>
-#include <map>
 
 // delete it
 #include <fcntl.h>
@@ -37,15 +37,43 @@ namespace ldb {
     function() = default;
     function(const std::string str) : symbol(str), line(0) {}
     size_t line;
+    param_variable retour;
     std::vector<param_variable> arg;
     std::vector<variable> var;
   };
 
-  struct SYMBOLS
-  {
+  struct SYMBOLS {
     SYMBOLS() = default;
+
     std::vector<function> funs;
     std::vector<variable> vars;
+  };
+
+
+  class DwarfReader {
+  public:
+    DwarfReader(const int fd);
+    ~DwarfReader() = default;
+
+    void populateDwarf(const SymbolTable& symTab);
+
+  private:
+    void read_cu(const SymbolTable& symTab);
+    void get_die_and_siblings(Dwarf_Die die);
+
+    void load_file_tabl(Dwarf_Die cu_die);
+    void load_basic_type_map(Dwarf_Die die);
+    void load_complexe_type_map(Dwarf_Die die);
+    void parse_function(Dwarf_Die die, function& info);
+
+    void print_die_data(Dwarf_Die die);
+
+  private:
+    Dwarf_Debug dbg;
+    std::vector<std::string> file_tabl;
+    std::map<Dwarf_Off, std::string> type_tabl;
+
+    SYMBOLS SYMBOLS_TABL;
   };
 
 
@@ -54,8 +82,9 @@ namespace ldb {
   static void read_cu(Dwarf_Debug dbg);
 
   static std::vector<std::string> read_file_tabl(Dwarf_Die cu_die);
-  static void load_type_map(Dwarf_Debug dbg, Dwarf_Die in_die);
-  static void get_die_and_siblings(Dwarf_Debug dbg, Dwarf_Die in_die, int level);
+  static void load_basic_type_map(Dwarf_Debug dbg, Dwarf_Die die);
+  static void load_pointer_type_map(Dwarf_Debug dbg, Dwarf_Die die);
+  static void get_die_and_siblings(Dwarf_Debug dbg, Dwarf_Die die, int level);
   static void print_die_data(Dwarf_Debug dbg, Dwarf_Die die, int level);
 
   static void parse_function(Dwarf_Debug dbg, Dwarf_Die die, function& info);

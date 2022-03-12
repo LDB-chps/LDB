@@ -104,7 +104,7 @@ std::unique_ptr<DebugInfo> ELFReader::read(const std::filesystem::path &path,
   res->symbols_table = std::move(*local_symbol_table);
 
   // Parse dwarf
-   populateDwarf(0, res->symbols_table);
+   //populateDwarf(0, res->symbols_table);
 
   return res;
 }
