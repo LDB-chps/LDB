@@ -1,4 +1,4 @@
-#include <ELFReader.h>
+#include <ELFParser.h>
 #include <iostream>
 
 int main(int argc, char* argv[]) {
@@ -7,7 +7,10 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
-  auto infos = ldb::ELFReader::read(argv[1], std::atoi(argv[2]));
-  std::cout << infos->getSymbolsTable() << std::endl;
+  ldb::Process p(std::atoi(argv[2]));
+  auto infos = ldb::readDebugInfo(argv[1], p);
+  if (not infos)
+    return 1;
+  std::cout << *infos->getSymbolTable() << std::endl;
   return 0;
 }

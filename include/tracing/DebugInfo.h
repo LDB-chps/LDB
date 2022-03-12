@@ -1,30 +1,41 @@
 #pragma once
-#include "Section.h"
+#include "Process.h"
 #include "SymbolTable.h"
 #include <elf.h>
+#include <filesystem>
 #include <iostream>
 #include <memory>
 #include <vector>
-#include <filesystem>
 
 namespace ldb {
   class DebugInfo {
-    friend class ELFReader;
   public:
 
+    DebugInfo() = default;
 
     DebugInfo(const DebugInfo& other) = delete;
     DebugInfo& operator=(const DebugInfo& other) = delete;
 
-    const SymbolTable& getSymbolsTable() const {
-      return symbols_table;
+    SymbolTable* getSymbolTable() {
+      return symbols_table.get();
+    }
+
+    const SymbolTable* getSymbolTable() const {
+      return symbols_table.get();
+    }
+
+    std::unique_ptr<SymbolTable> yieldSymbolTable() {
+      return std::move(symbols_table);
+    }
+
+    void setSymbolTable(std::unique_ptr<SymbolTable>&& table) {
+      symbols_table = std::move(table);
     }
 
   private:
-    DebugInfo() = default;
 
     std::filesystem::path executable_path;
-    SymbolTable symbols_table;
+    std::unique_ptr<SymbolTable> symbols_table;
   };
 
 }// namespace ldb

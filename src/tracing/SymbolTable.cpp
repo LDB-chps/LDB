@@ -3,44 +3,51 @@
 #include <thread>
 namespace ldb {
 
-  Symbol* SymbolTable::operator[](const std::string& name) {
-
-    for (auto& it : symbols) {
-      if (it.getName() == name) { return &it; }
+  void SymbolTable::shrinkToFit() {
+    for (SymbolTable* curr = this; curr != nullptr; curr = curr->next.get()) {
+      curr->symbols.shrink_to_fit();
     }
+  }
 
-    if (next) { return next->operator[](name); }
+  void SymbolTable::relocate(Elf64_Addr addr) {
+    for (SymbolTable* curr = this; curr != nullptr; curr = curr->next.get()) {
+      for (auto& sym : curr->symbols) sym.relocate(addr);
+    }
+  }
 
+  Symbol* SymbolTable::operator[](const std::string& name) {
+    for (SymbolTable* curr = this; curr != nullptr; curr = curr->next.get()) {
+      for (auto& sym : curr->symbols) {
+        if (sym.getName() == name) { return &sym; }
+      }
+    }
     return nullptr;
   }
 
   const Symbol* SymbolTable::operator[](const std::string& name) const {
-    for (auto& it : symbols) {
-      if (it.getName() == name) { return &it; }
+    for (const SymbolTable* curr = this; curr != nullptr; curr = curr->next.get()) {
+      for (const auto& sym : curr->symbols) {
+        if (sym.getName() == name) { return &sym; }
+      }
     }
-
-    if (next) { return next->operator[](name); }
-
     return nullptr;
   }
 
   Symbol* SymbolTable::operator[](Elf64_Addr addr) {
-    for (auto& it : symbols) {
-      if (it.getAddress() == addr) { return &it; }
+    for (SymbolTable* curr = this; curr != nullptr; curr = curr->next.get()) {
+      for (auto& sym : curr->symbols) {
+        if (sym.getAddress() == addr) { return &sym; }
+      }
     }
-
-    if (next) { return next->operator[](addr); }
-
     return nullptr;
   }
 
   const Symbol* SymbolTable::operator[](Elf64_Addr addr) const {
-    for (auto& it : symbols) {
-      if (it.getAddress() == addr) { return &it; }
+    for (const SymbolTable* curr = this; curr != nullptr; curr = curr->next.get()) {
+      for (const auto& sym : curr->symbols) {
+        if (sym.getAddress() == addr) { return &sym; }
+      }
     }
-
-    if (next) { return next->operator[](addr); }
-
     return nullptr;
   }
 
@@ -80,6 +87,17 @@ namespace ldb {
     if (not closest or closest->getAddress() == 0) { return nullptr; }
 
     return closest;
+  }
+
+
+  void SymbolTable::join(std::unique_ptr<SymbolTable>&& other) {
+    if (not other) { return; }
+
+    // Append the new table at the end of the list
+    SymbolTable* curr = nullptr;
+    for (curr = this; this->next; curr = curr->next.get())
+      ;
+    curr->next = std::move(other);
   }
 
 

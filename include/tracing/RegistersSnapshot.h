@@ -1,5 +1,5 @@
 #pragma once
-#include "process.h"
+#include "Process.h"
 #include <iostream>
 #include <vector>
 

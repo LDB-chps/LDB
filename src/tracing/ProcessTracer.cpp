@@ -1,5 +1,5 @@
-#include "processTracer.h"
-#include "registersSnapshot.h"
+#include "ProcessTracer.h"
+#include "RegistersSnapshot.h"
 
 
 namespace ldb {

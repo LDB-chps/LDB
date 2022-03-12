@@ -3,7 +3,7 @@
 #include "tracerView.h"
 #include <QLabel>
 #include <QToolBar>
-#include <processTracer.h>
+#include <ProcessTracer.h>
 
 namespace ldb::gui {
   class TracerToolBar : public QToolBar {

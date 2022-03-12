@@ -4,7 +4,7 @@
 #include <QFrame>
 #include <QTabWidget>
 #include <QTableView>
-#include <processTracer.h>
+#include <ProcessTracer.h>
 
 namespace ldb::gui {
 

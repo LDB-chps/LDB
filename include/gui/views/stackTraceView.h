@@ -2,7 +2,7 @@
 
 #include "tracerView.h"
 #include <QTreeView>
-#include <processTracer.h>
+#include <ProcessTracer.h>
 
 namespace ldb::gui {
 

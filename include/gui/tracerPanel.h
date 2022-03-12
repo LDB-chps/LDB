@@ -1,7 +1,7 @@
 #pragma once
 
 #include "codeView.h"
-#include "processTracer.h"
+#include "ProcessTracer.h"
 #include "stackTraceView.h"
 #include "tracerToolBar.h"
 #include "variableView.h"

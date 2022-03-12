@@ -11,6 +11,11 @@ find_package(Threads REQUIRED)
 find_package(TBB REQUIRED)
 find_package(Boost REQUIRED)
 
+set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
+message(STATUS "CMAKE_MODULE_PATH: ${CMAKE_MODULE_PATH}")
+find_package(LibDwarf REQUIRED)
+find_package(Libunwind REQUIRED)
+
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 

@@ -1,4 +1,4 @@
-#include "process.h"
+#include "Process.h"
 #include <csignal>
 #include <iostream>
 #include <sys/ptrace.h>
@@ -64,5 +64,9 @@ namespace ldb {
 
   void Process::wait() {
     waitpid(pid, nullptr, 0);
+  }
+
+  bool Process::attach() {
+    return not ptrace(PTRACE_ATTACH, pid, nullptr, nullptr);
   }
 }// namespace ldb

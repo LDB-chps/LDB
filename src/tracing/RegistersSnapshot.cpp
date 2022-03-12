@@ -1,4 +1,4 @@
-#include "registersSnapshot.h"
+#include "RegistersSnapshot.h"
 #include <sys/ptrace.h>
 #include <sys/user.h>
 #include <unistd.h>

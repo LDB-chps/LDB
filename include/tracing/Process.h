@@ -77,7 +77,22 @@ namespace ldb {
      */
     void wait();
 
+    /**
+     * @brief Returns true if we're attached to the process, false otherwise
+     * @return
+     */
+    bool isAttached() const {
+      return is_attached;
+    }
+
+    /**
+     * @brief Attempt to attach to the process
+     * @return True if the process is running and we attached to it, false otherwise
+     */
+    bool attach();
+
   private:
     pid_t pid = 0;
+    bool is_attached = false;
   };
 }// namespace ldb

@@ -1,8 +1,8 @@
 
 #pragma once
 
-#include "process.h"
-#include "registersSnapshot.h"
+#include "Process.h"
+#include "RegistersSnapshot.h"
 #include <filesystem>
 #include <memory>
 #include <shared_mutex>
