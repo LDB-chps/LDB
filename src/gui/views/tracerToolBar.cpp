@@ -1,8 +1,9 @@
 #include "tracerToolBar.h"
+#include "gui/tracerPanel.h"
 #include <QLabel>
 
 namespace ldb::gui {
-  TracerToolBar::TracerToolBar(QWidget* parent) : QToolBar(parent) {
+  TracerToolBar::TracerToolBar(TracerPanel* parent) : TracerView(parent), QToolBar(parent) {
     // By default, icons are a bit too large, reduce them
     setIconSize(QSize(20, 20));
 
@@ -35,5 +36,15 @@ namespace ldb::gui {
 
     // Display section for current program
     addWidget(new QLabel("PID: "));
+    connect(parent, &TracerPanel::tracerUpdated, this, &TracerToolBar::updateView);
+    connect(parent, &TracerPanel::tracerUpdated, this, &TracerToolBar::startView);
   }
+
+  void TracerToolBar::startView() {
+    label_program_name->setText("Program: " +
+                                QString::fromStdString(tracer_panel->getTracer()->getExecutable()));
+
+  }
+
+  void TracerToolBar::updateView() {}
 }// namespace ldb::gui

@@ -5,8 +5,10 @@
 #include "stackTraceView.h"
 #include "tracerToolBar.h"
 #include "variableView.h"
+#include "PtyHandler.h"
 #include <QGridLayout>
 #include <QWidget>
+#include <QThread>
 
 namespace ldb::gui {
 
@@ -62,6 +64,8 @@ namespace ldb::gui {
     void tracerRaisedError();
 
   private:
+    void updateLoop();
+
     std::unique_ptr<ProcessTracer> process_tracer;
 
     void setupToolbar(QGridLayout* layout);
@@ -72,9 +76,11 @@ namespace ldb::gui {
 
     QTabWidget* setupTabbedPane();
 
+    QThread* update_thread = nullptr;
     TracerToolBar* toolbar = nullptr;
     VariableView* variable_view = nullptr;
     StackTraceView* stack_trace_view = nullptr;
     CodeView* code_view = nullptr;
+    PtyHandler* pipe_handler = nullptr;
   };
 }// namespace ldb::gui

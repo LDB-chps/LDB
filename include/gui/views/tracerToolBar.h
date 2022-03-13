@@ -4,18 +4,18 @@
 #include <QLabel>
 #include <QToolBar>
 #include <ProcessTracer.h>
+#include "tracerView.h"
 
 namespace ldb::gui {
-  class TracerToolBar : public QToolBar {
+  class TracerToolBar : public QToolBar, public TracerView {
     Q_OBJECT
   public:
-    TracerToolBar(QWidget* parent = nullptr);
+    TracerToolBar(TracerPanel* parent = nullptr);
 
-    /**
-     * @brief Update the view to reflect the tracer state
-     * @param tracer A pointer to the tracer. If nullptr, the view should present a blank state.
-     */
-    void update(ProcessTracer* tracer) {}
+
+  public slots:
+    void updateView();
+    void startView();
 
   signals:
     // Emitted when the open command button is clicked

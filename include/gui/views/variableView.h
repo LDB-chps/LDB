@@ -3,7 +3,7 @@
 #include "tracerView.h"
 #include <QFrame>
 #include <QTabWidget>
-#include <QTableView>
+#include <QTableWidget>
 #include <ProcessTracer.h>
 
 namespace ldb::gui {
@@ -20,13 +20,13 @@ namespace ldb::gui {
      * @brief Update the view to reflect the tracer state
      * @param tracer A pointer to the tracer. If nullptr, the view should present a blank state.
      */
-    void update();
+    void updateView();
 
   private:
     void fillTableFromSnapshot(const RegistersSnapshot& snapshot);
 
     QTabWidget* tabs;
-    QTableView* variables;
-    QTableView* registers;
+    QTableWidget* variables;
+    QTableWidget* registers;
   };
 }// namespace ldb::gui

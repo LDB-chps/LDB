@@ -32,7 +32,7 @@ namespace ldb {
     static std::unique_ptr<ProcessTracer> fromCommand(const std::string& executable,
                                                       const std::string& args);
 
-    ProcessTracer(Process&& process, const std::string& executable);
+    ProcessTracer(Process&& process, std::string  executable);
 
     /**
      * @brief Yield the current process registers values
@@ -66,17 +66,38 @@ namespace ldb {
     std::string getCurrentFunctionName();
 
     /**
+     * @brief The process this tracer is attached to has its output redirected to a file
+     * This functions returns the file descriptor of this file. This can be used for reading the
+     * output to a QtWindow
+     * @return
+     */
+    int getSlaveFd() {
+      return process.getSlaveFd();
+    }
+
+    int getMasterFd() {
+      return process.getMasterFd();
+    }
+
+    /**
+     * @brief Block until the process receives a signal or terminates
+     * @return The status of the process after the wait
+     */
+    Process::Status waitNextEvent();
+
+    /**
      * @brief Returns a vector containing the full stacktrace of the process
      * @return A vector containing the full stacktrace of the process, or an empty vector if this
      * data is unavailable
      */
-    // std::unique_ptr<StackTrace> getStackTrace();
+   // std::unique_ptr<StackTrace> getStackTrace();
 
     Process::Status getProcessStatus() {
       return process.getStatus();
     }
 
   private:
+
     /** A thread is created to handle the process
      * Therefore, a lock is used to avoid concurency
      */

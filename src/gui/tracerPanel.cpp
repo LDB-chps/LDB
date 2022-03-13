@@ -9,6 +9,7 @@
 #include <QToolBar>
 #include <QToolButton>
 #include <tscl.hpp>
+#include "PtyHandler.h"
 
 namespace ldb::gui {
   TracerPanel::TracerPanel(QWidget* parent) : QWidget(parent) {
@@ -25,6 +26,7 @@ namespace ldb::gui {
     splitter_layout->setSpacing(0);
     auto widget = new QWidget;
     widget->setLayout(splitter_layout);
+    widget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
     splitter->addWidget(widget);
     setupVariableView(splitter_layout);
@@ -32,6 +34,9 @@ namespace ldb::gui {
 
     auto* tabbed_pane = setupTabbedPane();
     splitter->addWidget(tabbed_pane);
+    // The terminal should be smaller than the other two panes.
+    splitter->setStretchFactor(0, 6);
+    splitter->setStretchFactor(1, 3);
   }
 
   void TracerPanel::setupToolbar(QGridLayout* layout) {
@@ -65,15 +70,20 @@ namespace ldb::gui {
     stacked_pane->addTab(message, "Message");
     stacked_pane->setTabIcon(0, QIcon(":/icons/menu-2-line.png"));
 
+    // Setup the tab where the process output and input will be displayed
+    pipe_handler = new PtyHandler(this, -1);
+    stacked_pane->addTab(pipe_handler, "Input/Output");
+    stacked_pane->setTabIcon(1, QIcon(":/icons/terminal-box-fill.png"));
+
     // Setup the tab where the stack trace will be displayed
     stack_trace_view = new StackTraceView(this);
     stacked_pane->addTab(stack_trace_view, "Stack trace");
-    stacked_pane->setTabIcon(1, QIcon(":/icons/stack-fill.png"));
+    stacked_pane->setTabIcon(2, QIcon(":/icons/stack-fill.png"));
 
     // Setup the tab where the loaded libraries will be displayed
     auto libs = new QTextEdit(this);
     stacked_pane->addTab(libs, "Loaded libraries");
-    stacked_pane->setTabIcon(2, QIcon(":/icons/list-settings-line.png"));
+    stacked_pane->setTabIcon(3, QIcon(":/icons/list-settings-line.png"));
 
     return stacked_pane;
   }
@@ -92,7 +102,13 @@ namespace ldb::gui {
         tscl::logger("Failed to start executable", tscl::Log::Error);
         return;
       }
-      auto status = process_tracer->getProcessStatus();
+
+      // Redirect the process output to the dedicated widget
+      pipe_handler->setPipes(process_tracer->getMasterFd());
+      update_thread = QThread::create(&TracerPanel::updateLoop, this);
+      update_thread->start();
+
+      // Emit signals to update the UI accordingly
       emit executionStarted();
       emit tracerUpdated();
     } catch (const std::exception& e) {
@@ -100,6 +116,20 @@ namespace ldb::gui {
                    tscl::Log::Error);
       tscl::logger(e.what(), tscl::Log::Error);
       return;
+    }
+  }
+
+  void TracerPanel::updateLoop() {
+    bool done = false;
+    while (not done) {
+      if (not process_tracer) {
+        done = true;
+      }
+      auto status = process_tracer->waitNextEvent();
+      if (status == Process::Status::kDead or status == Process::Status::kKilled) {
+        done = true;
+      }
+      emit tracerUpdated();
     }
   }
 }// namespace ldb::gui

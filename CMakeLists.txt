@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.17)
-project(LDB VERSION 0.0.1 LANGUAGES C CXX)
+project(LDB VERSION 0.0.3 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 
