@@ -30,9 +30,9 @@ namespace ldb {
      * @return A tracer attached to the new process
      */
     static std::unique_ptr<ProcessTracer> fromCommand(const std::string& executable,
-                                                      const std::string& args);
+                                                      const std::vector<std::string>& args);
 
-    ProcessTracer(Process&& process, std::string  executable);
+    ProcessTracer(Process&& process, std::string executable);
 
     /**
      * @brief Yield the current process registers values
@@ -46,6 +46,10 @@ namespace ldb {
      * unavailable
      */
     std::string getExecutable();
+
+    Process& getProcess() {
+      return process;
+    }
 
     pid_t getPid() const {
       return process.getPid();
@@ -104,14 +108,13 @@ namespace ldb {
      * @return A vector containing the full stacktrace of the process, or an empty vector if this
      * data is unavailable
      */
-   // std::unique_ptr<StackTrace> getStackTrace();
+    // std::unique_ptr<StackTrace> getStackTrace();
 
     Process::Status getProcessStatus() {
       return process.getStatus();
     }
 
   private:
-
     /** A thread is created to handle the process
      * Therefore, a lock is used to avoid concurency
      */

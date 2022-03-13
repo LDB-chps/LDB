@@ -12,6 +12,10 @@ namespace ldb::gui {
     explicit MainWindow(QWidget* parent = nullptr);
 
     // TODO: implement me !
+    bool startCommand(const std::string& command, const std::string& args) {
+      return tracer_panel->startExecution(command, args);
+    }
+
     bool startCommand(const std::string& command, const std::vector<std::string>& args) {
       return tracer_panel->startExecution(command, args);
     }

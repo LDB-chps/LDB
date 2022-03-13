@@ -1,6 +1,8 @@
 #pragma once
 
 #include <memory>
+#include <shared_mutex>
+#include <vector>
 
 namespace ldb {
 
@@ -42,7 +44,8 @@ namespace ldb {
   std::string signalToString(Signal signal);
 
   /**
-   * @brief Lightweight non-copyable process handle
+   * @brief Thread-safe process handle
+   *
    */
   class Process {
   public:
@@ -55,7 +58,24 @@ namespace ldb {
      */
     explicit Process(pid_t pid);
 
+    /**
+     * @brief Kills the process if it is alive.
+     */
     ~Process();
+
+    /**
+     * @brief Process Handle should not be copyable to avoid concurrent access
+     */
+    Process(const Process&) = delete;
+    Process& operator=(const Process&) = delete;
+
+    /**
+     * @brief Thread safe move copy. Beware that this does not guarantee that other threads won't be
+     * able to acces the process after it has been moved. It is up to the user to ensure that no
+     * other thread is accessing the process after it has been moved.
+     */
+    Process(Process&&) noexcept ;
+    Process& operator=(Process&&) noexcept ;
 
     /**
      * @brief Launch the command with its argument in a new process and return a Process handle to
@@ -67,24 +87,16 @@ namespace ldb {
      * @param pipe_output The subprocess output and input will be redirected to dedicated pipes.
      * @return Process The process handle to the launched process.
      */
-    static std::unique_ptr<Process> fromCommand(const std::string& command, const std::string& args,
+    static std::unique_ptr<Process> fromCommand(const std::string& command,
+                                                const std::vector<std::string>& args,
                                                 bool pipe_output = false);
 
     /**
      * @brief Fork a new process and return a Process handle to it.
-     * @param create_pipe If true, creates a pipe for the subprocess output and input.
+     * @param create_pty If true, creates a pseudo terminal for the subprocess output and input.
      * @return A new process handle.
      */
-    static std::unique_ptr<Process> fork(bool create_pipe = false);
-
-    /**
-     * @brief Process Handle should not be copyable to avoid concurrent access
-     */
-    Process(const Process&) = delete;
-    Process& operator=(const Process&) = delete;
-
-    Process(Process&&) = default;
-    Process& operator=(Process&&) = default;
+    static std::unique_ptr<Process> fork(bool create_pty = false);
 
     /**
      * @brief Returns the current status of the process
@@ -126,11 +138,6 @@ namespace ldb {
     }
 
     /**
-     * @brief Wait for the process to exit or for a signal to raise.
-     */
-    void wait();
-
-    /**
      * @brief Returns true if we're attached to the process, false otherwise
      * @return
      */
@@ -144,14 +151,26 @@ namespace ldb {
      */
     bool attach();
 
-    int getMasterFd() {
+    /**
+     * @brief If the process posses a pseudo terminal, returns the file descriptor of the master
+     * @return
+     */
+    int getMasterFd() const {
       return master_fd;
     }
 
-    int getSlaveFd() {
+    /**
+     * @brief If the process posses a pseudo terminal, returns the file descriptor of the slave
+     * @return
+     */
+    int getSlaveFd() const {
       return slave_fd;
     }
 
+    /**
+     * @brief Returns the last signal that was raised by the process
+     * @return The last signal that was raised by the process, or kUnknown if not signal was raised
+     */
     Signal getLastSignal() const {
       return last_signal;
     }
@@ -171,6 +190,7 @@ namespace ldb {
     Status status = Status::kUnknown;
     Signal last_signal = Signal::kUnknown;
     bool is_attached = false;
+    std::shared_mutex mutex;
   };
 
   /**

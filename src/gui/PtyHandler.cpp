@@ -29,7 +29,6 @@ namespace ldb::gui {
 
     // No need to create a thread if the file descriptors are invalid
     if (pty_fd < 0) {
-      output->setDisabled(true);
       input->setDisabled(true);
       button_send->setDisabled(true);
       return;
@@ -58,7 +57,7 @@ namespace ldb::gui {
     input->clear();
   }
 
-  void PtyHandler::setPipes(int fd) {
+  void PtyHandler::setPTy(int fd) {
     // Terminate the thread to avoid concurrency issues
     // The thread may have not been allocated yet
     if (thread and thread->isRunning()) { thread->terminate(); }
@@ -66,7 +65,6 @@ namespace ldb::gui {
     this->pty_fd = fd;
 
     // Disable the widgets if the file descriptors are invalid
-    output->setDisabled(fd < 0);
     input->setDisabled(fd < 0);
     button_send->setDisabled(fd < 0);
 
