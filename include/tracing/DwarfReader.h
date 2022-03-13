@@ -15,6 +15,8 @@
 
 namespace ldb {
 
+  enum class LANGAGE { C, CPP, UNKNOWN };
+
   struct symbol {
     symbol() = default;
     symbol(const std::string str) : name(str) {}
@@ -37,6 +39,7 @@ namespace ldb {
     function() = default;
     function(const std::string str) : symbol(str), line(0) {}
     size_t line;
+    std::string file;
     param_variable retour;
     std::vector<param_variable> arg;
     std::vector<variable> var;
@@ -56,12 +59,14 @@ namespace ldb {
     ~DwarfReader() = default;
 
     void populateDwarf(const SymbolTable& symTab);
+    const LANGAGE getLangage() { return langsrc; }
 
   private:
     void read_cu(const SymbolTable& symTab);
     void get_die_and_siblings(Dwarf_Die die);
 
-    void load_file_tabl(Dwarf_Die cu_die);
+    void load_langage(Dwarf_Die die);
+    void load_file_tabl(Dwarf_Die die);
     void load_basic_type_map(Dwarf_Die die);
     void load_complexe_type_map(Dwarf_Die die);
     void parse_function(Dwarf_Die die, function& info);
@@ -70,26 +75,11 @@ namespace ldb {
 
   private:
     Dwarf_Debug dbg;
+    LANGAGE langsrc;
     std::vector<std::string> file_tabl;
     std::map<Dwarf_Off, std::string> type_tabl;
 
     SYMBOLS SYMBOLS_TABL;
   };
-
-
-  void populateDwarf(int fd, SymbolTable& symTab);
-
-  static void read_cu(Dwarf_Debug dbg);
-
-  static std::vector<std::string> read_file_tabl(Dwarf_Die cu_die);
-  static void load_basic_type_map(Dwarf_Debug dbg, Dwarf_Die die);
-  static void load_pointer_type_map(Dwarf_Debug dbg, Dwarf_Die die);
-  static void get_die_and_siblings(Dwarf_Debug dbg, Dwarf_Die die, int level);
-  static void print_die_data(Dwarf_Debug dbg, Dwarf_Die die, int level);
-
-  static void parse_function(Dwarf_Debug dbg, Dwarf_Die die, function& info);
-
-  static SYMBOLS SYMBOLS_TABL;
-  static std::map<Dwarf_Off, std::string> TYPE_TABL;
 
 }// namespace ldb
