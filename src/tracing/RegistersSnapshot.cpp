@@ -1,4 +1,4 @@
-#include "registersSnapshot.h"
+#include "RegistersSnapshot.h"
 #include <sys/ptrace.h>
 #include <sys/user.h>
 #include <unistd.h>
@@ -42,7 +42,7 @@ namespace ldb {
 
   RegistersSnapshot::RegistersSnapshot(Process& process) {
     // We need the process to be suspended to get the registers.
-    if (process.getStatus() != Process::Status::Stopped) { return; }
+    if (not isProbeableStatus(process.getStatus())) { return; }
     user_regs_struct regs{};
 
     if (ptrace(PTRACE_GETREGS, process.getPid(), nullptr, &regs) == -1)

@@ -8,7 +8,7 @@ namespace ldb::gui {
   class TracerPanel;
 
   /**
-   * @brief Base class of all views that should update their content when the
+   * @brief Base class of all views that should updateView their content when the
    * tracer is updated.
    */
   class TracerView {

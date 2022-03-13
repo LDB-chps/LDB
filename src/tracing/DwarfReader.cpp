@@ -4,17 +4,11 @@
 namespace ldb {
 
   DwarfReader::DwarfReader(const int fd) : langsrc(LANGAGE::UNKNOWN) {
-    int fdd = open("/home/johnkyky/Documents/elf/pid", O_RDONLY);
-    if (fdd == -1) {
-      std::cout << "error" << std::endl;
-      exit(100);
-    }
-
-    const int res = dwarf_init(fdd, DW_DLC_READ, nullptr, nullptr, &dbg, nullptr);
+    const int res = dwarf_init(fd, DW_DLC_READ, nullptr, nullptr, &dbg, nullptr);
     if (res == DW_DLV_ERROR) { throw std::runtime_error("dwarf_init failed"); }
   }
 
-  void DwarfReader::populateDwarf(const SymbolTable& symTab) {
+  void DwarfReader::populateDwarf(const SymbolTable* symTab) {
     if (!dbg) { throw std::runtime_error("dwarf dbg not initialized"); }
 
     read_cu(symTab);
@@ -58,7 +52,7 @@ namespace ldb {
     }
   }
 
-  void DwarfReader::read_cu(const SymbolTable& symTab) {
+  void DwarfReader::read_cu(const SymbolTable* symTab) {
     Dwarf_Unsigned cu_header_length = 0;
     Dwarf_Half version_stamp = 0;
     Dwarf_Unsigned abbrev_offset = 0;

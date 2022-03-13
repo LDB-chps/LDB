@@ -4,7 +4,7 @@
 #include <QLabel>
 #include <QPlainTextEdit>
 #include <QVBoxLayout>
-#include <processTracer.h>
+#include <ProcessTracer.h>
 
 namespace ldb::gui {
 

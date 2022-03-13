@@ -58,12 +58,14 @@ namespace ldb {
     DwarfReader(const int fd);
     ~DwarfReader() = default;
 
-    void populateDwarf(const SymbolTable& symTab);
-    const LANGAGE getLangage() { return langsrc; }
+    void populateDwarf(const SymbolTable* symTab);
+    const LANGAGE getLangage() {
+      return langsrc;
+    }
 
   private:
-    void read_cu(const SymbolTable& symTab);
-    void get_die_and_siblings(Dwarf_Die die);
+    void read_cu(const SymbolTable* symTab);
+    void get_die_and_siblings(const Dwarf_Die die);
 
     void load_langage(Dwarf_Die die);
     void load_file_tabl(Dwarf_Die die);

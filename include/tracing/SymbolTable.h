@@ -20,6 +20,14 @@ namespace ldb {
       symbols.reserve(size);
     }
 
+    bool isEmpty() const {
+      return symbols.empty();
+    }
+
+    void shrinkToFit();
+
+    void relocate(Elf64_Addr);
+
     Symbol& push_back(const Symbol& symbol) {
       symbols.push_back(symbol);
       return symbols.back();
@@ -40,14 +48,9 @@ namespace ldb {
     Symbol* findClosestFunction(Elf64_Addr addr);
     const Symbol* findClosestFunction(Elf64_Addr addr) const;
 
-    void join(std::unique_ptr<SymbolTable>&& other) {
-      if (other == nullptr)
-        return;
-      SymbolTable* ptr = nullptr;
-      for (ptr = this; ptr->next != nullptr; ptr = ptr->next.get())
-        ;
-      ptr->next = std::move(other);
-    }
+    void join(std::unique_ptr<SymbolTable>&& other);
+
+
 
     using iterator = std::vector<Symbol>::iterator;
     using const_iterator = std::vector<Symbol>::const_iterator;
