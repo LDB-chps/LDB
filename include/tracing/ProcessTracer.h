@@ -47,6 +47,10 @@ namespace ldb {
      */
     std::string getExecutable();
 
+    pid_t getPid() {
+      return process.getPid();
+    }
+
     /**
      * @brief Returns the current file the process is in
      * @return A path to the source file, or an empty path if this data is unavailable
@@ -75,6 +79,12 @@ namespace ldb {
       return process.getSlaveFd();
     }
 
+    /**
+     * @brief The process this tracer is attached to has its output redirected to a file
+     * This functions returns the file descriptor of this file. This can be used for reading the
+     * output to a QtWindow
+     * @return
+     */
     int getMasterFd() {
       return process.getMasterFd();
     }

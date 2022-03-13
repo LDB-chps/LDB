@@ -96,7 +96,15 @@ namespace ldb {
         return status = Status::kUnknown;
     }
     if (WIFEXITED(s)) { return status = Status::kExited; }
-    if (WIFSTOPPED(s)) { return status = Status::kStopped; }
+    // Handle signals that can be caught
+    if (WIFSTOPPED(s)) {
+      // ptrace stops when receiving any signal fatal or not.
+      // Instead of checking for fatal signals, we check for the stop signal and consider other
+      // signals as fatal
+      if (WSTOPSIG(s) == SIGSTOP) { return status = Status::kStopped; }
+      return status = Status::kKilled;
+    }
+    // Handle signals that can't be caught
     if (WIFSIGNALED(s)) { return status = Status::kKilled; }
     return Status::kRunning;
   }

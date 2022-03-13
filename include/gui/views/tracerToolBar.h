@@ -22,6 +22,8 @@ namespace ldb::gui {
     void openCommand();
 
   private:
+    void updateButtons();
+
     QAction* action_open_folder;
     QAction* action_toggle_play;
     QAction* action_stop;
@@ -30,5 +32,6 @@ namespace ldb::gui {
     QLabel* label_program_name;
     QLabel* label_program_id;
     QLabel* label_current_file;
+    QLabel *label_pid;
   };
 }// namespace ldb::gui
