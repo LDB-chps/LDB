@@ -5,7 +5,7 @@
 namespace ldb::gui {
   TracerToolBar::TracerToolBar(TracerPanel* parent) : TracerView(parent), QToolBar(parent) {
     // By default, icons are a bit too large, reduce them
-    setIconSize(QSize(20, 20));
+    setIconSize(QSize(16, 16));
 
     // Open a new program
     action_open_folder = new QAction(QIcon(":/icons/folder-open-fill.png"), "Start command");
@@ -31,13 +31,11 @@ namespace ldb::gui {
     // action_stop->setEnabled(false);
     addAction(action_stop);
 
-    action_continue = new QAction(QIcon(":/icons/skip-forward-fill.png"), "Continue");
-    action_continue->setEnabled(false);
-    // action_continue->setEnabled(false);
-    addAction(action_continue);
-
     label_pid = new QLabel("PID: ");
     addWidget(label_pid);
+
+    label_last_signal = new QLabel("");
+    addWidget(label_last_signal);
 
     connect(parent, &TracerPanel::tracerUpdated, this, &TracerToolBar::updateView);
     connect(parent, &TracerPanel::executionStarted, this, &TracerToolBar::startView);
@@ -63,13 +61,18 @@ namespace ldb::gui {
       action_toggle_play->setEnabled(true);
       action_reset->setEnabled(true);
       action_stop->setEnabled(true);
-      action_continue->setEnabled(true);
     } else {
       action_toggle_play->setEnabled(false);
       action_reset->setEnabled(true);
       action_stop->setEnabled(false);
-      action_continue->setEnabled(false);
     }
+    auto ls = tracer_panel->getTracer()->getLastSignal();
+    if (ls != Signal::kUnknown)
+      label_last_signal->setText(
+              "Last signal: " +
+              QString::fromStdString(signalToString(tracer_panel->getTracer()->getLastSignal())));
+    else
+      label_last_signal->setText("");
   }
 
   void TracerToolBar::updateView() {

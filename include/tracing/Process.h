@@ -4,6 +4,43 @@
 
 namespace ldb {
 
+  enum class Signal {
+    kUnknown,
+    kSIGHUP,
+    kSIGINT,
+    kSIGQUIT,
+    kSIGILL,
+    kSIGTRAP,
+    kSIGABRT,
+    kSIGBUS,
+    kSIGFPE,
+    kSIGKILL,
+    kSIGUSR1,
+    kSIGSEGV,
+    kSIGUSR2,
+    kSIGPIPE,
+    kSIGALRM,
+    kSIGTERM,
+    kSIGSTKFLT,
+    kSIGCHLD,
+    kSIGCONT,
+    kSIGSTOP,
+    kSIGTSTP,
+    kSIGTTIN,
+    kSIGTTOU,
+    kSIGURG,
+    kSIGXCPU,
+    kSIGXFSZ,
+    kSIGVTALRM,
+    kSIGPROF,
+    kSIGWINCH,
+    kSIGIO,
+    kSIGPWR,
+    kSIGSYS
+  };
+
+  std::string signalToString(Signal signal);
+
   /**
    * @brief Lightweight non-copyable process handle
    */
@@ -115,6 +152,10 @@ namespace ldb {
       return slave_fd;
     }
 
+    Signal getLastSignal() const {
+      return last_signal;
+    }
+
   private:
     /**
      * @brief The subprocess will use those pipes for redirecting its output
@@ -128,6 +169,14 @@ namespace ldb {
 
     pid_t pid = 0;
     Status status = Status::kUnknown;
+    Signal last_signal = Signal::kUnknown;
     bool is_attached = false;
   };
+
+  /**
+   * @brief Returns true if the given status is ok for probing, false otherwise
+   * @param status The status to check
+   * @return
+   */
+  bool isProbeableStatus(Process::Status status);
 }// namespace ldb

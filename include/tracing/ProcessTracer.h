@@ -47,8 +47,12 @@ namespace ldb {
      */
     std::string getExecutable();
 
-    pid_t getPid() {
+    pid_t getPid() const {
       return process.getPid();
+    }
+
+    Signal getLastSignal() const {
+      return process.getLastSignal();
     }
 
     /**

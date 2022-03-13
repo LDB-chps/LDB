@@ -28,10 +28,10 @@ namespace ldb::gui {
     QAction* action_toggle_play;
     QAction* action_stop;
     QAction* action_reset;
-    QAction* action_continue;
     QLabel* label_program_name;
     QLabel* label_program_id;
     QLabel* label_current_file;
     QLabel *label_pid;
+    QLabel* label_last_signal;
   };
 }// namespace ldb::gui

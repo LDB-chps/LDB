@@ -11,6 +11,75 @@
 
 namespace ldb {
 
+  std::string signalToString(Signal signal) {
+    switch (signal) {
+      case Signal::kUnknown:
+        return "Unknown signal";
+      case Signal::kSIGHUP:
+        return "sighup: Hangup (parent process ended)";
+      case Signal::kSIGINT:
+        return "sigint: Interrupt (Ctrl-C)";
+      case Signal::kSIGQUIT:
+        return "sigquit: Quit (core-dumped)";
+      case Signal::kSIGILL:
+        return "sigill: Illegal instruction (corrupted binary)";
+      case Signal::kSIGTRAP:
+        return "sigtrap: Trace/breakpoint trap";
+      case Signal::kSIGABRT:
+        return "sigabrt: Aborted";
+      case Signal::kSIGBUS:
+        return "sigbus: Bus error (Invalid memory access)";
+      case Signal::kSIGFPE:
+        return "sigfpe: Floating point exception";
+      case Signal::kSIGKILL:
+        return "sigkill: Killed";
+      case Signal::kSIGUSR1:
+        return "sigusr1: User-defined signal 1";
+      case Signal::kSIGSEGV:
+        return "sigsegv: Segmentation fault";
+      case Signal::kSIGUSR2:
+        return "sigusr2: User-defined signal 2";
+      case Signal::kSIGPIPE:
+        return "sigpipe: Write to pipe with no readers";
+      case Signal::kSIGALRM:
+        return "sigalrm: Alarm clock";
+      case Signal::kSIGTERM:
+        return "sigterm: Terminated";
+      case Signal::kSIGSTKFLT:
+        return "sigstkflt: Stack fault";
+      case Signal::kSIGCHLD:
+        return "sigchld: Child status has changed";
+      case Signal::kSIGCONT:
+        return "sigcont: Continued";
+      case Signal::kSIGSTOP:
+        return "sigstop: Stopped (pause)";
+      case Signal::kSIGTSTP:
+        return "sigtstp: Stopped (user)";
+      case Signal::kSIGTTIN:
+        return "sigttin: Stopped (tty input)";
+      case Signal::kSIGTTOU:
+        return "sigttou: Stopped (tty output)";
+      case Signal::kSIGURG:
+        return "sigurg: Urgent condition on socket";
+      case Signal::kSIGXCPU:
+        return "sigxcpu: CPU time limit exceeded";
+      case Signal::kSIGXFSZ:
+        return "sigxfsz: File size limit exceeded";
+      case Signal::kSIGVTALRM:
+        return "sigvtalrm: Virtual alarm clock";
+      case Signal::kSIGPROF:
+        return "sigprof: Profiling timer expired";
+      case Signal::kSIGWINCH:
+        return "sigwinch: Window size change";
+      case Signal::kSIGIO:
+        return "sigio: I/O now possible";
+      case Signal::kSIGPWR:
+        return "sigpwr: Power failure restart";
+      case Signal::kSIGSYS:
+        return "sigsys: Bad system call";
+    }
+    return "Unknown signal";
+  }
 
   Process::Process(pid_t pid) : pid(pid) {
     if (pid != -1) status = getStatus();
@@ -101,6 +170,7 @@ namespace ldb {
       // ptrace stops when receiving any signal fatal or not.
       // Instead of checking for fatal signals, we check for the stop signal and consider other
       // signals as fatal
+      last_signal = static_cast<Signal>(WSTOPSIG(s));
       if (WSTOPSIG(s) == SIGSTOP) { return status = Status::kStopped; }
       return status = Status::kKilled;
     }
@@ -139,4 +209,9 @@ namespace ldb {
     is_attached = not failure;
     return is_attached;
   }
+
+  bool isProbeableStatus(Process::Status status) {
+    return status == Process::Status::kStopped or status == Process::Status::kKilled;
+  }
+
 }// namespace ldb

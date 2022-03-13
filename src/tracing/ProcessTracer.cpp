@@ -1,9 +1,9 @@
 #include "ProcessTracer.h"
 
-#include <utility>
 #include "RegistersSnapshot.h"
-#include <unistd.h>
 #include "sys/wait.h"
+#include <unistd.h>
+#include <utility>
 
 namespace ldb {
 
@@ -20,13 +20,14 @@ namespace ldb {
     return std::make_unique<ProcessTracer>(std::move(*process), command);
   }
 
-  ProcessTracer::ProcessTracer(Process&& process, std::string  executable)
-      : process(std::move(process)), executable_path(std::move(executable)) {;
+  ProcessTracer::ProcessTracer(Process&& process, std::string executable)
+      : process(std::move(process)), executable_path(std::move(executable)) {
+    ;
   }
 
   std::unique_ptr<RegistersSnapshot> ProcessTracer::getRegistersSnapshot() {
     std::shared_lock<std::shared_mutex> lock(main_mutex);
-    if (process.getStatus() != Process::Status::kStopped) { return {}; }
+    if (not isProbeableStatus(process.getStatus())) { return {}; }
 
     return std::make_unique<RegistersSnapshot>(process);
   }
@@ -57,8 +58,8 @@ namespace ldb {
   }
 
   /**
-     * @brief Block until the process receives a signal or terminates
-     * @return The status of the process after the wait
+   * @brief Block until the process receives a signal or terminates
+   * @return The status of the process after the wait
    */
   Process::Status ProcessTracer::waitNextEvent() {
     return process.waitNextEvent();
