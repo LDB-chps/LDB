@@ -90,10 +90,11 @@ namespace ldb {
   }
 
   Process::~Process() {
-    std::scoped_lock<std::shared_mutex> lock(mutex);
-    if (pid != -1) return;
+    if (pid == -1) return;
 
-    if (status == Status::kRunning or status == Status::kStopped) kill();
+    if (status != Status::kDead)
+      kill();
+
     // Close all pipes if they are still open
     // No need to check for failure since those pipes cannot be used after we return from this
     // destructor
