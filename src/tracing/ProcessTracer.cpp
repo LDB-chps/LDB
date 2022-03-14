@@ -17,43 +17,55 @@ namespace ldb {
     process->waitNextEvent();
     process->resume();
 
-    return std::make_unique<ProcessTracer>(std::move(*process), command);
+    return std::make_unique<ProcessTracer>(std::move(process), command, args);
   }
 
-  ProcessTracer::ProcessTracer(Process&& process, std::string executable)
-      : process(std::move(process)), executable_path(std::move(executable)) {
-    ;
+  ProcessTracer::ProcessTracer(std::unique_ptr<Process>&& process, std::string executable,
+                               std::vector<std::string> args)
+      : process(std::move(process)), executable_path(std::move(executable)),
+        arguments(std::move(args)) {
+
+    if (not this->process) throw std::runtime_error("ProcessTracer: cannot trace a null process");
+  }
+
+  bool ProcessTracer::restart() {
+    process = Process::fromCommand(executable_path, arguments, true);
+    if (not process) throw std::runtime_error("ProcessTracer: failed to restart the process");
+    process->waitNextEvent();
+    process->resume();
+
+    return true;
   }
 
   std::unique_ptr<RegistersSnapshot> ProcessTracer::getRegistersSnapshot() {
     std::shared_lock<std::shared_mutex> lock(main_mutex);
-    if (not isProbeableStatus(process.getStatus())) { return {}; }
+    if (not isProbeableStatus(process->getStatus())) { return {}; }
 
-    return std::make_unique<RegistersSnapshot>(process);
+    return std::make_unique<RegistersSnapshot>(*process);
   }
 
-  std::string ProcessTracer::getExecutable() {
+  const std::string& ProcessTracer::getExecutable() {
     // The executable_path is immutable, so we can safely return a copy without acquiring the mutex
     return executable_path;
   }
 
   std::string ProcessTracer::getCurrentFile() {
     std::shared_lock<std::shared_mutex> lock(main_mutex);
-    if (process.getStatus() != Process::Status::kStopped) { return {}; }
+    if (process->getStatus() != Process::Status::kStopped) { return {}; }
 
     return "";
   }
 
   long ProcessTracer::getCurrentLineNumber() {
     std::shared_lock<std::shared_mutex> lock(main_mutex);
-    if (process.getStatus() != Process::Status::kStopped) { return {}; }
+    if (process->getStatus() != Process::Status::kStopped) { return {}; }
 
     return -1;
   }
 
   std::string ProcessTracer::getCurrentFunctionName() {
     std::shared_lock<std::shared_mutex> lock(main_mutex);
-    if (process.getStatus() != Process::Status::kStopped) { return {}; }
+    if (process->getStatus() != Process::Status::kStopped) { return {}; }
     return "";
   }
 
@@ -62,7 +74,7 @@ namespace ldb {
    * @return The status of the process after the wait
    */
   Process::Status ProcessTracer::waitNextEvent() {
-    return process.waitNextEvent();
+    return process->waitNextEvent();
   }
 
   /*

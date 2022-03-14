@@ -18,6 +18,8 @@ namespace ldb::gui {
    * Also provides multiple actions to control the tracer
    *
    * This class emits signals when something happens to the tracee
+   * Author note: This class is quite big and could be split up
+   * into smaller classes. However, we don't want do deal with this for a project of this scale.
    */
   class TracerPanel : public QWidget {
     Q_OBJECT
@@ -28,6 +30,7 @@ namespace ldb::gui {
      * @param parent
      */
     explicit TracerPanel(QWidget* parent = nullptr);
+    ~TracerPanel() override;
 
     /**
      * @brief Returns the current tracer. May return nullptr
@@ -37,57 +40,38 @@ namespace ldb::gui {
       return process_tracer.get();
     }
 
-
   public slots:
-
-    /**
-     * @brief Resume the current tracee if it is paused
-     */
-    void resumeExecution();
-
-    /**
-     * @brief Pause the current tracee if it is running
-     */
-    void pauseExecution();
 
     /**
      * @brief Toggle the current tracee between running and paused
      */
     void toggleExecution();
 
-    void maybeRestartExecution();
-
     /**
-     * @brief Attempt to start the command if no program is already running. Otherwise,
-     * start a dialog to ask the user if he wants to stop the current program.
-     * @param command The command to start
-     * @param args The arguments to pass to the command
+     * @brief Stop the process without killing the tracer
      */
-    void maybeStartExecution(const std::string& command, const std::string& args);
+    void stopExecution();
+
+    void restartExecution(bool force = false);
 
     /**
      * @brief Creates a dialog to select a process to start tracing.
      */
     void displayCommandDialog();
 
-    bool startExecution(const std::string& command, const std::string& args);
+    bool startExecution(const std::string& command, const std::string& args, bool force = false);
 
     /**
      * @brief Start a new program, killing the current one if any.
      * @param command The command to start
      * @param args The arguments to pass to the command
      */
-    bool startExecution(const std::string& command, const std::vector<std::string>& args);
-
-    /**
-     * @brief Popup a dialog to ask the user if he wants to stop the current program if any.
-     */
-    void maybeEndExecution();
+    bool startExecution(const std::string& command, const std::vector<std::string>& args, bool force = false);
 
     /**
      * @brief Stop the current program if any.
      */
-    void endExecution();
+    void endTracer(bool force = false);
 
   signals:
 
@@ -109,16 +93,14 @@ namespace ldb::gui {
 
   private:
 
+    void setupThreads();
+    void endThreads();
+
     /**
-     * @brief Loop function on which a new thread is created to periodically update the tracee status
+     * @brief Loop function on which a new thread is created to periodically update the tracee
+     * status
      */
     void updateLoop();
-
-
-    std::string old_cmd;
-    std::vector<std::string> old_args;
-
-    std::unique_ptr<ProcessTracer> process_tracer;
 
     void setupToolbar(QGridLayout* layout);
 
@@ -127,6 +109,8 @@ namespace ldb::gui {
     void setupVariableView(QGridLayout* layout);
 
     QTabWidget* setupTabbedPane();
+
+    std::unique_ptr<ProcessTracer> process_tracer;
 
     QThread* update_thread = nullptr;
     TracerToolBar* toolbar = nullptr;

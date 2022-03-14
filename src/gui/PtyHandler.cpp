@@ -57,7 +57,7 @@ namespace ldb::gui {
     input->clear();
   }
 
-  void PtyHandler::setPTy(int fd) {
+  void PtyHandler::reassignTo(int fd) {
     // Terminate the thread to avoid concurrency issues
     // The thread may have not been allocated yet
     if (thread and thread->isRunning()) { thread->terminate(); }

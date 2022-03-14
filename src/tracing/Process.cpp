@@ -92,8 +92,7 @@ namespace ldb {
   Process::~Process() {
     if (pid == -1) return;
 
-    if (status != Status::kDead)
-      kill();
+    if (status != Status::kDead) kill();
 
     // Close all pipes if they are still open
     // No need to check for failure since those pipes cannot be used after we return from this
@@ -103,12 +102,18 @@ namespace ldb {
   }
 
   // Mutexes are non-copyable, so we cannot use the default move operators
-  Process::Process(Process&& other) noexcept : master_fd(-1), slave_fd(-1) {
+  Process::Process(Process&& other) noexcept : pid(-1), master_fd(-1), slave_fd(-1) {
     *this = std::move(other);
   }
 
   Process& Process::operator=(Process&& other) noexcept {
+
+    // If we're replacing the current process with another one, we must first stop it
+    // To avoid creating zombies
+    if (pid != -1 and other.pid != pid) kill();
+
     std::scoped_lock<std::shared_mutex> lock(mutex);
+
     pid = other.pid;
     status = other.status;
     master_fd = other.master_fd;
@@ -242,7 +247,8 @@ namespace ldb {
 
   bool Process::kill() {
     std::scoped_lock<std::shared_mutex> lock(mutex);
-    if (::kill(pid, SIGTERM) == 0) {
+    if (status == Status::kDead) return true;
+    if (::kill(pid, SIGKILL) == 0) {
       waitpid(pid, nullptr, 0);
       status = Status::kDead;
       return true;

@@ -32,7 +32,15 @@ namespace ldb {
     static std::unique_ptr<ProcessTracer> fromCommand(const std::string& executable,
                                                       const std::vector<std::string>& args);
 
-    ProcessTracer(Process&& process, std::string executable);
+    /**
+     * @brief Builds a new tracer from an existing process
+     * @param process The process to trace. Must be different than nullptr, and already traced.
+     * @param executable The executable of the process.
+     * @param args The arguments used to launch the process.
+     */
+    ProcessTracer(std::unique_ptr<Process>&& process, std::string executable, std::vector<std::string> args);
+
+    bool restart();
 
     /**
      * @brief Yield the current process registers values
@@ -45,18 +53,18 @@ namespace ldb {
      * @return The path to the executable linked to this tracer, or an empty string if this data is
      * unavailable
      */
-    std::string getExecutable();
+    const std::string& getExecutable();
 
     Process& getProcess() {
-      return process;
+      return *process;
     }
 
     pid_t getPid() const {
-      return process.getPid();
+      return process->getPid();
     }
 
     Signal getLastSignal() const {
-      return process.getLastSignal();
+      return process->getLastSignal();
     }
 
     /**
@@ -84,7 +92,7 @@ namespace ldb {
      * @return
      */
     int getSlaveFd() {
-      return process.getSlaveFd();
+      return process->getSlaveFd();
     }
 
     /**
@@ -94,7 +102,7 @@ namespace ldb {
      * @return
      */
     int getMasterFd() {
-      return process.getMasterFd();
+      return process->getMasterFd();
     }
 
     /**
@@ -111,7 +119,7 @@ namespace ldb {
     // std::unique_ptr<StackTrace> getStackTrace();
 
     Process::Status getProcessStatus() {
-      return process.getStatus();
+      return process->getStatus();
     }
 
   private:
@@ -120,11 +128,11 @@ namespace ldb {
      */
     std::shared_mutex main_mutex;
 
-    Process process;
+    std::unique_ptr<Process> process;
 
     std::string executable_path;
 
-    // SymbolTable symbols;
+    std::vector<std::string> arguments;
   };
 
 }// namespace ldb
