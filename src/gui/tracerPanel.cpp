@@ -72,7 +72,7 @@ namespace ldb::gui {
 
   QTabWidget* TracerPanel::setupTabbedPane() {
     auto* stacked_pane = new QTabWidget(this);
-    stacked_pane->setTabPosition(QTabWidget::South);
+    stacked_pane->setTabPosition(QTabWidget::North);
     stacked_pane->setTabShape(QTabWidget::Rounded);
     stacked_pane->setIconSize(QSize(16, 16));
 
