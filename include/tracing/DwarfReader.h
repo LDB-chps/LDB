@@ -37,12 +37,13 @@ namespace ldb {
 
   struct function : public symbol {
     function() = default;
-    function(const std::string str) : symbol(str), line(0) {}
+    function(const std::string str) : symbol(str), line(0), is_declaration(false) {}
     size_t line;
     std::string file;
     param_variable retour;
     std::vector<param_variable> arg;
     std::vector<variable> var;
+    bool is_declaration;
   };
 
   struct SYMBOLS {
@@ -72,8 +73,6 @@ namespace ldb {
     void load_basic_type_map(Dwarf_Die die);
     void load_complexe_type_map(Dwarf_Die die);
     void parse_function(Dwarf_Die die, function& info);
-
-    void print_die_data(Dwarf_Die die);
 
   private:
     Dwarf_Debug dbg;

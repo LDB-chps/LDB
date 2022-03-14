@@ -36,7 +36,9 @@ namespace ldb {
 
     std::cout << "\n\n" << std::endl;
     for (int i = 0; i < SYMBOLS_TABL.funs.size(); i++) {
-      std::cout << std::dec << "L." << SYMBOLS_TABL.funs[i].line << " "
+      std::string is_declaration = "";
+      if (SYMBOLS_TABL.funs[i].is_declaration) is_declaration = " is decl ";
+      std::cout << std::dec << "L." << SYMBOLS_TABL.funs[i].line << " " << is_declaration
                 << SYMBOLS_TABL.funs[i].retour.type << " " << SYMBOLS_TABL.funs[i].name << " ";
       for (int j = 0; j < SYMBOLS_TABL.funs[i].arg.size(); j++)
         std::cout << "arg" << j << "(" << SYMBOLS_TABL.funs[i].arg[j].type << " "
@@ -107,6 +109,13 @@ namespace ldb {
 
     if (got_tag_name && tag == DW_TAG_subprogram) {
       function info;
+
+      Dwarf_Bool in_declaration = 0;
+      const int got_declaration = !dwarf_attr(die, DW_AT_declaration, &attr, nullptr) &&
+                                  !dwarf_formflag(attr, &in_declaration, nullptr);
+
+      info.is_declaration = in_declaration;
+
       const int got_name = !dwarf_diename(die, &name, nullptr);
 
       const int got_type = !dwarf_attr(die, DW_AT_type, &attr, nullptr) &&
