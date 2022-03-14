@@ -143,6 +143,7 @@ namespace ldb {
         if (it.empty()) continue;
         argv_c.push_back(it.c_str());
       }
+      argv_c.push_back(nullptr);
 
       if (pipe_output) {
         // Redirect both stdout and stderr to the pipe
@@ -157,7 +158,7 @@ namespace ldb {
       // So we have to do a const_cast...
       // We really should manually copy the arguments properly,
       // But I don't want to spend too much time on that
-      execvp(command.c_str(), const_cast<char* const*>(argv_c.data()));
+      execv(command.c_str(), const_cast<char* const*>(argv_c.data()));
       // Should only happen if execvp fails
       exit(1);
     }
@@ -186,8 +187,6 @@ namespace ldb {
 
 
     res->pid = ::fork();
-    // Update the status after changing its pid
-    res->getStatus();
     return res;
   }
 
@@ -254,6 +253,7 @@ namespace ldb {
   bool Process::attach() {
     std::scoped_lock<std::shared_mutex> lock(mutex);
     bool failure = ptrace(PTRACE_ATTACH, pid, nullptr, nullptr);
+    waitpid(pid, nullptr, 0);
     is_attached = not failure;
     return is_attached;
   }

@@ -43,7 +43,6 @@ namespace ldb {
   RegistersSnapshot::RegistersSnapshot(Process& process) {
     // We need the process to be suspended to get the registers.
     if (not isProbeableStatus(process.getStatus())) { return; }
-    std::cout << "Getting registers" << std::endl;
     user_regs_struct regs{};
 
     if (ptrace(PTRACE_GETREGS, process.getPid(), nullptr, &regs) == -1)

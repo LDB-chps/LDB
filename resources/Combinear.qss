@@ -5,13 +5,54 @@ Company: GTRONICK
 Last updated: 17/04/2018
 Available at: https://github.com/GTRONICK/QSS/blob/master/ElegantDark.qss
 */
+
+QWidget {
+    background-color:rgb(82, 82, 82);
+    color:rgb(255, 255, 255);
+}
+
 QMainWindow {
 	background-color:rgb(82, 82, 82);
 }
-QTextEdit {
-	background-color:rgb(42, 42, 42);
-	color: rgb(0, 255, 0);
+
+QAbstractScrollArea {
+    background-color:rgb(55, 55, 55);
 }
+
+QScrollBar {
+    background-color:rgb(65, 65, 65);
+    width:15px;
+    margin:0px;
+}
+
+QScrollBar::handle {
+    background-color:rgb(82, 82, 82);
+    width:15px;
+    margin:0px;
+}
+
+QScrollBar::add-line, QScrollBar::sub-line  {
+      border: none;
+      background: none;
+}
+
+QScrollBar::up-arrow, QScrollBar::down-arrow {
+          border: none;
+          background: none;
+          color: none;
+}
+
+QDialog {
+    background-color:rgb(82, 82, 82);
+}
+
+QTextEdit {
+	background-color:rgb(55, 55, 55);
+	color: rgb(255, 255, 255);
+}
+
+
+
 QPushButton{
 	border-style: outset;
 	border-width: 2px;

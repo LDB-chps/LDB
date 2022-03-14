@@ -5,6 +5,7 @@
 #include <QMessageBox>
 #include <QProgressBar>
 #include <QWidget>
+#include <QApplication>
 
 namespace ldb::gui {
   MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
@@ -13,10 +14,20 @@ namespace ldb::gui {
     setupMenuBar();
   }
 
+  void MainWindow::refreshCSS() {
+    QFile stylesheet_file("./my.qss");
+    stylesheet_file.open(QFile::ReadOnly);
+    QString styleSheet = QLatin1String(stylesheet_file.readAll());
+    qApp->setStyleSheet(styleSheet);
+  }
+
   void MainWindow::setupMenuBar() {
     QMenuBar* menu_bar = new QMenuBar(this);
     // File menu for loading new program and quitting
     QMenu* file_menu = menu_bar->addMenu("File");
+    QAction* refresh_css  = file_menu->addAction("Refresh CSS");
+    connect(refresh_css, &QAction::triggered, this, &MainWindow::refreshCSS);
+
     QAction* load_action =
             file_menu->addAction(QIcon(":/icons/folder-open-fill.png"), "Start command");
     connect(load_action, &QAction::triggered, tracer_panel, &TracerPanel::displayCommandDialog);

@@ -141,6 +141,8 @@ namespace ldb {
         badbit = true;
         return;
       }
+
+      // readDwarf(elf, debug_info.get());
       elf_end(elf);
     }
 
@@ -336,8 +338,6 @@ namespace ldb {
 
     bool ELFFile::parseDynamicSymbols(Process& process) {
 
-      if (not process.isAttached() and not process.attach()) return false;
-
       auto dynsec = std::find_if(sections.begin(), sections.end(),
                                  [](const Elf64_Shdr& sec) { return sec.sh_type == SHT_DYNSYM; });
       if (dynsec == sections.end()) return false;
@@ -359,9 +359,7 @@ namespace ldb {
           if (not res) res = std::move(new_symbols);
           else
             res->join(std::move(new_symbols));
-        } catch (std::runtime_error& e) {
-          std::cout << e.what() << std::endl;
-        }
+        } catch (std::runtime_error& e) { std::cout << e.what() << std::endl; }
       }
 
       auto* old_symtab = debug_info->getSymbolTable();
@@ -385,8 +383,8 @@ namespace ldb {
 
     auto elf_file = ELFFile::make(path);
     if (not elf_file) return nullptr;
+    if (not process.isAttached() and not process.attach()) return nullptr;
     elf_file->parseDynamicSymbols(process);
-    elf_file->parseDwarf();
     return elf_file->yieldDebugInfo();
   }
 
