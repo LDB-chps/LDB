@@ -36,6 +36,10 @@ QScrollBar::add-line, QScrollBar::sub-line  {
       background: none;
 }
 
+QTableWidget {
+    background-color:rgb(42, 42, 42);
+}
+
 QScrollBar::up-arrow, QScrollBar::down-arrow {
           border: none;
           background: none;
@@ -51,7 +55,9 @@ QTextEdit {
 	color: rgb(255, 255, 255);
 }
 
-
+LogWidget {
+    background-color:rgb(42, 42, 42);
+}
 
 QPushButton{
 	border-style: outset;

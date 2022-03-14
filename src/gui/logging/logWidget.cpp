@@ -3,7 +3,7 @@
 
 namespace ldb::gui {
   LogWidget::LogWidget(QtLogHandler* handler, QWidget* parent)
-      : QWidget(parent), parent_handler(handler) {
+      : QFrame(parent), parent_handler(handler) {
     QGridLayout* layout = new QGridLayout(this);
     setLayout(layout);
     layout->setContentsMargins(0, 0, 0, 0);

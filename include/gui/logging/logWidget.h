@@ -8,7 +8,7 @@ namespace ldb::gui {
   /**
    * @brief Widget for displaying log messages.
    */
-  class LogWidget : public QWidget {
+  class LogWidget : public QFrame {
   public:
     LogWidget(QtLogHandler* handler, QWidget* parent = nullptr);
     ~LogWidget();

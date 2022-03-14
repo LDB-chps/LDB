@@ -9,7 +9,7 @@ namespace ldb::gui {
 
     // Open a new program
     action_open_folder = new QAction(QIcon(":/icons/folder-open-fill.png"), "Start command");
-    connect(action_open_folder, &QAction::triggered, this, &TracerToolBar::openCommand);
+    connect(action_open_folder, &QAction::triggered, parent, &TracerPanel::displayCommandDialog);
     addAction(action_open_folder);
 
     // Program execution section

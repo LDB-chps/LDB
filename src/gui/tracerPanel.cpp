@@ -2,81 +2,66 @@
 #include "PtyHandler.h"
 #include "commandDialog.h"
 #include "logWidget.h"
+#include <QHBoxLayout>
 #include <QMessageBox>
 #include <QSplitter>
 #include <QTabWidget>
 #include <QTextEdit>
 #include <QToolButton>
+#include <QVBoxLayout>
 #include <boost/algorithm/string.hpp>
 #include <tscl.hpp>
 
 namespace ldb::gui {
   TracerPanel::TracerPanel(QWidget* parent) : QWidget(parent) {
 
-    auto* layout = new QGridLayout(this);
+    auto* layout = new QVBoxLayout(this);
     layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(0);
-    setupToolbar(layout);
 
-    // We want to be able to dynamically resize the terminal
-    // For this, we need to create a splitter, and put both the terminal the the other widgets in it
-    //   TOP_SIDE
-    //   ============= SPLITTER
-    //   TERMINAL_TABS
-    auto* splitter = new QSplitter(Qt::Vertical, this);
-    layout->addWidget(splitter, 1, 0);
-
-    // Create a layout for the inside of the splitter
-    auto* splitter_layout = new QGridLayout(nullptr);
-    splitter_layout->setContentsMargins(0, 0, 0, 0);
-    splitter_layout->setSpacing(0);
-
-    // Create a dummy widget that will contain every top-side widget
-    auto widget = new QWidget;
-    widget->setLayout(splitter_layout);
-    splitter->addWidget(widget);
-    // Add the top side widget in the dummy
-    setupVariableView(splitter_layout);
-    setupCodeView(splitter_layout);
-
-    // Setup the terminal tabs
-    auto* tabbed_pane = setupTabbedPane();
-    splitter->addWidget(tabbed_pane);
-
-    // The terminal should be smaller than the top side
-    // High stretch factor for the top side
-    splitter->setStretchFactor(0, 6);
-    // Low stretch factor for the terminal
-    splitter->setStretchFactor(1, 3);
-  }
-
-  TracerPanel::~TracerPanel() {
-    // Kill the tracer before exiting
-    endTracer(true);
-  }
-
-  void TracerPanel::setupToolbar(QGridLayout* layout) {
-    // Setup the main toolbar
     toolbar = new TracerToolBar(this);
-    layout->addWidget(toolbar, 0, 0);
-    connect(toolbar, &TracerToolBar::openCommand, this, &TracerPanel::displayCommandDialog);
-  }
+    layout->addWidget(toolbar);
 
-  void TracerPanel::TracerPanel::setupCodeView(QGridLayout* layout) {
+
+    // We want to be able to dynamically resize the panels
+    // For this, we need to create a horizontal_splitter, and put both the terminal the the other
+    // widgets in it
+    //                    TOP_PANEL
+    //   ============= HORIZONTAL SPLITTER ============
+    //   MESSAGE PANEL         |  INFORMATION PANEL
+    //                 VERTICAL splitter
+    //                         |
+    auto* horizontal_splitter = new QSplitter(Qt::Vertical, this);
+    layout->addWidget(horizontal_splitter);
+
+    // Create a layout for the inside of the horizontal_splitter
+    auto* top_panel_layout = new QHBoxLayout(nullptr);
+    top_panel_layout->setContentsMargins(0, 0, 0, 0);
+    top_panel_layout->setSpacing(0);
+
+    // Create a dummy dummy_widget that will contain every top-side dummy_widget
+    auto top_widget = new QWidget;
+    top_widget->setLayout(top_panel_layout);
+    horizontal_splitter->addWidget(top_widget);
+
     code_view = new CodeView(this);
-    layout->addWidget(code_view, 0, 1, 1, 1);
-  }
+    top_panel_layout->addWidget(code_view);
 
-  void TracerPanel::setupVariableView(QGridLayout* layout) {
-    variable_view = new VariableView(this);
-    layout->addWidget(variable_view, 0, 0, 1, 1);
-  }
+    // Setup the bottom panel
+    // MESSAGE PANEL || INFORMATION PANEL
 
-  QTabWidget* TracerPanel::setupTabbedPane() {
-    auto* stacked_pane = new QTabWidget(this);
-    stacked_pane->setTabPosition(QTabWidget::North);
-    stacked_pane->setTabShape(QTabWidget::Rounded);
-    stacked_pane->setIconSize(QSize(16, 16));
+    auto* vertical_splitter = new QSplitter(Qt::Horizontal, horizontal_splitter);
+    horizontal_splitter->addWidget(vertical_splitter);
+
+    // The bottom panel should be smaller than the top side
+    // High stretch factor for the top side
+    horizontal_splitter->setStretchFactor(0, 6);
+    // Low stretch factor for the bottom side
+    horizontal_splitter->setStretchFactor(1, 3);
+
+    auto* message_tabs = new QTabWidget(vertical_splitter);
+    message_tabs->setIconSize(QSize(16, 16));
+    vertical_splitter->addWidget(message_tabs);
 
     // Setup the tab where the log will be displayed
     // Create a QtLogHandler that will display the log in the log widget
@@ -86,25 +71,37 @@ namespace ldb::gui {
     // Widget associated with the logger
     auto message = logger.getWidget();
 
-    stacked_pane->addTab(message, "Message");
-    stacked_pane->setTabIcon(0, QIcon(":/icons/menu-2-line.png"));
+    message_tabs->addTab(message, "Message");
+    message_tabs->setTabIcon(0, QIcon(":/icons/menu-2-line.png"));
 
     // Setup the tab where the process output and input will be displayed
     pty_handler = new PtyHandler(this, -1);
-    stacked_pane->addTab(pty_handler, "Input/Output");
-    stacked_pane->setTabIcon(1, QIcon(":/icons/terminal-box-fill.png"));
+    message_tabs->addTab(pty_handler, "Input/Output");
+    message_tabs->setTabIcon(1, QIcon(":/icons/terminal-box-fill.png"));
+    connect(this, &TracerPanel::executionStarted, [=]() { message_tabs->setCurrentIndex(1); });
+
+    auto* information_tab = new QTabWidget(vertical_splitter);
+    information_tab->setIconSize(QSize(16, 16));
+    vertical_splitter->addWidget(information_tab);
+
+    variable_view = new VariableView(this);
+    information_tab->addTab(variable_view, "Registers");
+    information_tab->setTabIcon(1, QIcon(":/icons/stack-fill.png"));
 
     // Setup the tab where the stack trace will be displayed
     stack_trace_view = new StackTraceView(this);
-    stacked_pane->addTab(stack_trace_view, "Stack trace");
-    stacked_pane->setTabIcon(2, QIcon(":/icons/stack-fill.png"));
+    information_tab->addTab(stack_trace_view, "Stack trace");
+    information_tab->setTabIcon(2, QIcon(":/icons/stack-fill.png"));
 
     // Setup the tab where the loaded libraries will be displayed
     auto libs = new QTextEdit(this);
-    stacked_pane->addTab(libs, "Loaded libraries");
-    stacked_pane->setTabIcon(3, QIcon(":/icons/list-settings-line.png"));
+    information_tab->addTab(libs, "Loaded libraries");
+    information_tab->setTabIcon(3, QIcon(":/icons/list-settings-line.png"));
+  }
 
-    return stacked_pane;
+  TracerPanel::~TracerPanel() {
+    // Kill the tracer before exiting
+    endTracer(true);
   }
 
   void TracerPanel::setupThreads() {
