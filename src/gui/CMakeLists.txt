@@ -3,7 +3,7 @@ add_subdirectory(views)
 add_subdirectory(logging)
 
 set(CURRENT_INCLUDE_DIR ${INCLUDE_DIR}/gui)
-qt_add_library(gui
+add_library(gui
         mainWindow.cpp ${CURRENT_INCLUDE_DIR}/mainWindow.h
         tracerPanel.cpp ${CURRENT_INCLUDE_DIR}/tracerPanel.h
         commandDialog.cpp ${CURRENT_INCLUDE_DIR}/commandDialog.h

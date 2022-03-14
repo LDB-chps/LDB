@@ -84,19 +84,19 @@ namespace ldb::gui {
     information_tab->setIconSize(QSize(16, 16));
     vertical_splitter->addWidget(information_tab);
 
-    variable_view = new VariableView(this);
-    information_tab->addTab(variable_view, "Registers");
-    information_tab->setTabIcon(1, QIcon(":/icons/stack-fill.png"));
-
     // Setup the tab where the stack trace will be displayed
     stack_trace_view = new StackTraceView(this);
     information_tab->addTab(stack_trace_view, "Stack trace");
-    information_tab->setTabIcon(2, QIcon(":/icons/stack-fill.png"));
+    information_tab->setTabIcon(0, QIcon(":/icons/stack-fill.png"));
+
+    variable_view = new VariableView(this);
+    information_tab->addTab(variable_view, "Registers");
+    information_tab->setTabIcon(1, QIcon(":/icons/view-module.png"));
 
     // Setup the tab where the loaded libraries will be displayed
     auto libs = new QTextEdit(this);
     information_tab->addTab(libs, "Loaded libraries");
-    information_tab->setTabIcon(3, QIcon(":/icons/list-settings-line.png"));
+    information_tab->setTabIcon(2, QIcon(":/icons/list-settings-line.png"));
   }
 
   TracerPanel::~TracerPanel() {

@@ -8,6 +8,7 @@
 #include <shared_mutex>
 #include <thread>
 #include <vector>
+#include "StackTrace.h"
 
 namespace ldb {
 
@@ -116,7 +117,7 @@ namespace ldb {
      * @return A vector containing the full stacktrace of the process, or an empty vector if this
      * data is unavailable
      */
-    // std::unique_ptr<StackTrace> getStackTrace();
+    std::unique_ptr<StackTrace> getStackTrace();
 
     Process::Status getProcessStatus() {
       return process->getStatus();

@@ -1,6 +1,6 @@
 
 set(CURRENT_INCLUDE_DIR ${INCLUDE_DIR}/gui/views)
-qt_add_library(views
+add_library(views
         variableView.cpp ${CURRENT_INCLUDE_DIR}/variableView.h
         tracerToolBar.cpp ${CURRENT_INCLUDE_DIR}/tracerToolBar.h
         stackTraceView.cpp ${CURRENT_INCLUDE_DIR}/stackTraceView.h

@@ -15,12 +15,14 @@ set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 message(STATUS "CMAKE_MODULE_PATH: ${CMAKE_MODULE_PATH}")
 find_package(LibDwarf REQUIRED)
 find_package(Libunwind REQUIRED)
-
-
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+message(STATUS ${LIBUNWIND_LIBRARIES})
 
 # TODO: Setup code coverage here
 # maybe_enable_code_coverage()
+
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
+set(CMAKE_AUTOUIC ON)
 
 add_subdirectory(resources)
 add_subdirectory(extern)

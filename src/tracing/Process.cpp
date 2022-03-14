@@ -265,7 +265,7 @@ namespace ldb {
   }
 
   bool isProbeableStatus(Process::Status status) {
-    return status == Process::Status::kStopped or status == Process::Status::kKilled;
+    return status != Process::Status::kRunning and status != Process::Status::kDead;
   }
 
 }// namespace ldb

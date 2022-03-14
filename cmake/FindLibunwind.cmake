@@ -23,6 +23,11 @@ if (NOT LIBUNWIND_LIBRARIES STREQUAL "LIBUNWIND_LIBRARIES-NOTFOUND")
   endif ()
 endif ()
 
+find_library(LIBUNWIND_PTRACE_LIBRARIES NAMES unwind-ptrace)
+#set(LIBUNWIND_LIBRARIES ${LIBUNWIND_LIBRARIES};${LIBUNWIND_PTRACE_LIBRARIES})
+find_library(LIBUNWIND_GENERIC_LIBRARIES NAMES unwind-generic)
+#set(LIBUNWIND_LIBRARIES ${LIBUNWIND_LIBRARIES};${LIBUNWIND_GENERIC_LIBRARIES})
+
 # some versions of libunwind need liblzma, and we don't use pkg-config
 # so we just look whether liblzma is installed, and add it if it is.
 # It might not be actually needed, but doesn't hurt if it is not.

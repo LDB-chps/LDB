@@ -1,8 +1,6 @@
 #include "ProcessTracer.h"
 
 #include "RegistersSnapshot.h"
-#include "sys/wait.h"
-#include <unistd.h>
 #include <utility>
 
 namespace ldb {
@@ -77,11 +75,9 @@ namespace ldb {
     return process->waitNextEvent();
   }
 
-  /*
   std::unique_ptr<StackTrace> ProcessTracer::getStackTrace() {
     std::shared_lock<std::shared_mutex> lock(main_mutex);
-    if (process.getStatus() != Process::Status::Stopped) { return {}; }
-    return {};
-  }*/
+    return std::make_unique<StackTrace>(*this);
+  }
 
 }// namespace ldb

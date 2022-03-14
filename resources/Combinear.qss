@@ -59,6 +59,15 @@ LogWidget {
     background-color:rgb(42, 42, 42);
 }
 
+QTreeWidget {
+    background-color:rgb(42, 42, 42);
+    font-size: 14px;
+}
+
+QTreeWidget::item {
+    font-size: 14px;
+}
+
 QPushButton{
 	border-style: outset;
 	border-width: 2px;
