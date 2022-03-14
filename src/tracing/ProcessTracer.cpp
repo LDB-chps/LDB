@@ -8,13 +8,13 @@
 namespace ldb {
 
   std::unique_ptr<ProcessTracer> ProcessTracer::fromCommand(const std::string& command,
-                                                            const std::string& args) {
+                                                            const std::vector<std::string>& args) {
     auto process = Process::fromCommand(command, args, true);
     if (not process) { return nullptr; }
 
-    process->wait();
     // The process automatically stops at launch when it is traced
     // We resume it
+    process->waitNextEvent();
     process->resume();
 
     return std::make_unique<ProcessTracer>(std::move(*process), command);

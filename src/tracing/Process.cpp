@@ -2,12 +2,14 @@
 #include <csignal>
 #include <fcntl.h>
 #include <iostream>
+#include <mutex>
 #include <pty.h>
 #include <sys/ptrace.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
+
 
 namespace ldb {
 
@@ -88,6 +90,7 @@ namespace ldb {
   }
 
   Process::~Process() {
+    std::scoped_lock<std::shared_mutex> lock(mutex);
     if (pid != -1) return;
 
     if (status == Status::kRunning or status == Status::kStopped) kill();
@@ -98,7 +101,28 @@ namespace ldb {
     close(slave_fd);
   }
 
-  std::unique_ptr<Process> Process::fromCommand(const std::string& command, const std::string& args,
+  // Mutexes are non-copyable, so we cannot use the default move operators
+  Process::Process(Process&& other) noexcept : master_fd(-1), slave_fd(-1) {
+    *this = std::move(other);
+  }
+
+  Process& Process::operator=(Process&& other) noexcept {
+    std::scoped_lock<std::shared_mutex> lock(mutex);
+    pid = other.pid;
+    status = other.status;
+    master_fd = other.master_fd;
+    slave_fd = other.slave_fd;
+
+    other.pid = -1;
+    other.status = Status::kUnknown;
+    other.master_fd = -1;
+    other.slave_fd = -1;
+    return *this;
+  }
+
+
+  std::unique_ptr<Process> Process::fromCommand(const std::string& command,
+                                                const std::vector<std::string>& args,
                                                 bool pipe_output) {
     // In the case where we want to pipe the output, we must creates the pipes before forking
     // Thus we temporarily init the process with a -1 pid
@@ -106,6 +130,18 @@ namespace ldb {
 
     if (res->getPid() == 0) {
       ptrace(PTRACE_TRACEME, 0, nullptr, nullptr);
+
+      // Build a vector containing all the arguments
+      std::vector<const char*> argv_c;
+      argv_c.reserve(args.size() + 1);
+      argv_c.push_back(command.c_str());
+
+      for (auto& it : args) {
+        // Do not add empty strings
+        // This may lead to crash
+        if (it.empty()) continue;
+        argv_c.push_back(it.c_str());
+      }
 
       if (pipe_output) {
         // Redirect both stdout and stderr to the pipe
@@ -116,10 +152,12 @@ namespace ldb {
         dup2(res->slave_fd, STDIN_FILENO);
       }
 
-      char* argv[3] = {const_cast<char*>(command.c_str()), "100", nullptr};
-
-      execvp(command.c_str(), argv);
-      std::cout << "Child process: exiting !" << std::endl;
+      // Unfortunately, execvp does not respect constness
+      // So we have to do a const_cast...
+      // We really should manually copy the arguments properly,
+      // But I don't want to spend too much time on that
+      execvp(command.c_str(), const_cast<char* const*>(argv_c.data()));
+      // Should only happen if execvp fails
       exit(1);
     }
 
@@ -127,18 +165,22 @@ namespace ldb {
     return res;
   }
 
-  std::unique_ptr<Process> Process::fork(bool create_pipe) {
+  std::unique_ptr<Process> Process::fork(bool create_pty) {
     auto res = std::make_unique<Process>(0);
 
     // We need to creates the pipes before forking
-    if (create_pipe and openpty(&res->master_fd, &res->slave_fd, nullptr, nullptr, nullptr)) {
+    if (create_pty and openpty(&res->master_fd, &res->slave_fd, nullptr, nullptr, nullptr)) {
 
       throw std::runtime_error("Failed to create pipes");
     }
-    termios tty_param;
+    // By default, the pty has echo enabled, meaning that the user will see what he types
+    // We disable this by changing the terminal settings
+    termios tty_param = {};
     tcgetattr(res->master_fd, &tty_param);
     tty_param.c_lflag &= ~ECHO;
     tcsetattr(res->master_fd, TCSANOW, &tty_param);
+
+    // Required before the slave pty can be used
     unlockpt(res->slave_fd);
 
 
@@ -149,12 +191,16 @@ namespace ldb {
   }
 
   Process::Status Process::getStatus() {
+    std::shared_lock<std::shared_mutex> lock(mutex);
     return status;
   }
 
   Process::Status Process::waitNextEvent() {
     int s;
     int res = waitpid(pid, &s, 0);
+
+    // Lock the mutex before accessing the status
+    std::scoped_lock<std::shared_mutex> lock(mutex);
     // The status hasn't changed
     if (res == 0) return status;
     // Failed to find the process
@@ -181,17 +227,22 @@ namespace ldb {
 
 
   bool Process::resume() {
+    std::scoped_lock<std::shared_mutex> lock(mutex);
     bool res = ptrace(PTRACE_CONT, pid, nullptr, nullptr) == 0;
     if (res) { status = Status::kRunning; }
     return res;
   }
 
   bool Process::pause() {
-    return ::kill(pid, SIGSTOP) == 0;
+    std::scoped_lock<std::shared_mutex> lock(mutex);
+    bool res = ::kill(pid, SIGSTOP) == 0;
+    if (res) { status = Status::kStopped; }
+    return res;
   }
 
   bool Process::kill() {
-    if (::kill(pid, SIGKILL) == 0) {
+    std::scoped_lock<std::shared_mutex> lock(mutex);
+    if (::kill(pid, SIGTERM) == 0) {
       waitpid(pid, nullptr, 0);
       status = Status::kDead;
       return true;
@@ -199,12 +250,8 @@ namespace ldb {
     return false;
   }
 
-  void Process::wait() {
-    waitpid(pid, nullptr, 0);
-    getStatus();
-  }
-
   bool Process::attach() {
+    std::scoped_lock<std::shared_mutex> lock(mutex);
     bool failure = ptrace(PTRACE_ATTACH, pid, nullptr, nullptr);
     is_attached = not failure;
     return is_attached;

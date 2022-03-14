@@ -38,16 +38,15 @@ namespace ldb::gui {
     auto tracer = tracer_panel->getTracer();
     if (tracer == nullptr) { return; }
 
-    // Empty the table
-    registers->clearContents();
-    registers->setRowCount(0);
-
     auto snapshot = tracer->getRegistersSnapshot();
 
     if (snapshot) {
+      // Empty the table
+      registers->clearContents();
+      registers->setRowCount(0);
+
       int i = 0;
-      for (auto& reg : *snapshot)
-      {
+      for (auto& reg : *snapshot) {
         registers->insertRow(i);
         registers->setItem(i, 0, new QTableWidgetItem(QString::fromStdString(reg.getName())));
         registers->setItem(i, 1,
@@ -57,7 +56,7 @@ namespace ldb::gui {
     }
 
     registers->setWordWrap(true);
-    //registers->resizeColumnsToContents();
+    // registers->resizeColumnsToContents();
   }
 
   void VariableView::fillTableFromSnapshot(const RegistersSnapshot& snapshot) {}
