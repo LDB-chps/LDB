@@ -22,6 +22,7 @@ namespace ldb::gui {
 
   public slots:
     void startAboutPopup();
+    void refreshCSS();
 
   private:
     void setupMenuBar();
