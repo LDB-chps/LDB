@@ -48,9 +48,9 @@ namespace ldb {
     Symbol* findClosestFunction(Elf64_Addr addr);
     const Symbol* findClosestFunction(Elf64_Addr addr) const;
 
+    std::string getObjectFileOf(const Elf64_Addr addr) const;
+
     void join(std::unique_ptr<SymbolTable>&& other);
-
-
 
     using iterator = std::vector<Symbol>::iterator;
     using const_iterator = std::vector<Symbol>::const_iterator;

@@ -10,6 +10,8 @@ namespace ldb::gui {
 
   class CodeDisplay;
 
+  QString getObjdump(const QString& path);
+
   /**
    * @brief Helper class to display the line numbers in the code view.
    */
@@ -70,10 +72,10 @@ namespace ldb::gui {
    * @brief The CodeView class is a QWidget that displays the source code of the
    * currently selected process.
    */
-  class CodeView : public QWidget {
+  class CodeView : public QWidget, public TracerView {
     Q_OBJECT
   public:
-    explicit CodeView(QWidget* parent);
+    explicit CodeView(TracerPanel* parent);
 
   public slots:
     /**
@@ -93,7 +95,10 @@ namespace ldb::gui {
      */
     void setHighlightedLine(int line);
 
+    void updateCodeDisplay();
+
   private:
+    std::string last_path;
     QString file_path;
     QLabel* label_file_path;
     QVBoxLayout* layout;

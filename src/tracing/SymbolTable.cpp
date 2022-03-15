@@ -89,6 +89,15 @@ namespace ldb {
     return closest;
   }
 
+  std::string SymbolTable::getObjectFileOf(const Elf64_Addr addr) const {
+    for (const SymbolTable* curr = this; curr != nullptr; curr = curr->next.get()) {
+      for (const auto& sym : curr->symbols) {
+        if (sym.getAddress() == addr) { return curr->object_file; }
+      }
+    }
+    return nullptr;
+  }
+
 
   void SymbolTable::join(std::unique_ptr<SymbolTable>&& other) {
     if (not other) { return; }

@@ -1,10 +1,35 @@
 #include "CodeView.h"
+#include "gui/TracerPanel.h"
 #include <QFile>
 #include <QLayout>
 #include <QPainter>
 #include <QTextBlock>
+#include <array>
+#include <cstdio>
+#include <iostream>
+#include <memory>
+#include <stdexcept>
+#include <string>
 
 namespace ldb::gui {
+
+  namespace {
+
+    QString getObjdump(const std::filesystem::path& path) {
+      std::array<char, 128> buffer = {0};
+      QString result;
+      std::string cmd = "objdump -d --no-show-raw-insn ";
+      cmd += path;
+
+      std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd.c_str(), "r"), pclose);
+      if (!pipe) { throw std::runtime_error("popen() failed!"); }
+      while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
+        result += buffer.data();
+      }
+      return result;
+    }
+
+  }// namespace
 
   CodeViewLineWidget::CodeViewLineWidget(CodeDisplay* cv) : QWidget(cv), code_view(cv) {}
 
@@ -26,6 +51,7 @@ namespace ldb::gui {
     connect(this, &CodeDisplay::blockCountChanged, this, &CodeDisplay::updateLineNumberWidth);
     connect(this, &CodeDisplay::updateRequest, this, &CodeDisplay::updateLineNumber);
     connect(this, &CodeDisplay::cursorPositionChanged, this, &CodeDisplay::highlightCurrentLine);
+
 
     updateLineNumberWidth(0);
     highlightCurrentLine();
@@ -114,7 +140,7 @@ namespace ldb::gui {
     setExtraSelections(extra_selections);
   }
 
-  CodeView::CodeView(QWidget* parent) : QWidget(parent) {
+  CodeView::CodeView(TracerPanel* parent) : QWidget(parent), TracerView(parent) {
     layout = new QVBoxLayout;
     layout->setSpacing(0);
     layout->setContentsMargins(0, 0, 0, 0);
@@ -126,6 +152,7 @@ namespace ldb::gui {
     code_display = new CodeDisplay(this);
     code_display->setSelectedLine(-1);
     layout->addWidget(code_display);
+    connect(parent, &TracerPanel::tracerUpdated, this, &CodeView::updateCodeDisplay);
 
     setLayout(layout);
   }
@@ -149,6 +176,29 @@ namespace ldb::gui {
 
   void CodeView::setHighlightedLine(int line) {
     code_display->setSelectedLine(line);
+  }
+
+  void CodeView::updateCodeDisplay() {
+    auto tracer = tracer_panel->getTracer();
+    if (not tracer) return;
+    auto stack = tracer->getStackTrace();
+    if (not stack) return;
+    auto debug_info = tracer->getDebugInfo();
+    auto* symbol_table = debug_info->getSymbolTable();
+
+    if (not symbol_table) return;
+    QString object;
+
+    for (auto& it : *stack) {
+      auto file = symbol_table.getObjectFileOf(it.getAddress());
+      if (file == last_path) break;
+      else {
+        last_path = file;
+        object = getObjdump(file);
+        code_display->setPlainText(object);
+        break;
+      }
+    }
   }
 
 }// namespace ldb::gui
