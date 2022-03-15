@@ -250,18 +250,26 @@ namespace ldb {
 
       auto& dynsec = *dynsec_it;
       size_t ndyn = dynsec.sh_size / sizeof(Elf64_Dyn);
+      std::cout << "Found " << ndyn << " dynamic entries" << std::endl;
 
       // Parse the section entries until we find the DT_DEBUG
       for (size_t i = 0; i < ndyn; i++) {
 
         Elf64_Addr curr_addr = dynsec.sh_addr + i * sizeof(Elf64_Dyn);
         long d_tag = ptrace(PTRACE_PEEKDATA, process.getPid(), curr_addr, nullptr);
+
         if (d_tag == -1) break;
 
         if (d_tag == DT_DEBUG) {
           // The debug struct addr is the second member of the struct
+
           auto r_debug_addr = (Elf64_Addr) ptrace(PTRACE_PEEKDATA, process.getPid(),
                                                   curr_addr + sizeof(Elf64_Sxword), 0);
+          if (r_debug_addr == 0 or errno) {
+            std::cerr << "Error while reading DT_DEBUG" << std::endl;
+            perror("ptrace");
+            return 0;
+          }
 
           // From the debug struct we can fetch the link_map's head address
           auto link_map_addr =
@@ -297,6 +305,7 @@ namespace ldb {
         dptr[i] = ptrace(PTRACE_PEEKDATA, process.getPid(), curr_addr + i * sizeof(long), 0);
         if (str[i] <= 0) break;
       }
+      str.resize(str.find('\0'));
       str.shrink_to_fit();
       return str;
     }
@@ -319,7 +328,7 @@ namespace ldb {
         /* base address */
         curr.first = (Elf64_Addr) ptrace(PTRACE_PEEKDATA, pid,
                                          link_map_addr + offsetof(struct link_map, l_addr), 0);
-        if (curr.first <= 0 or errno) {
+        if (curr.first <= 0) {
           res.pop_back();
           break;
         }
@@ -357,6 +366,7 @@ namespace ldb {
           if (not res) res = std::move(new_symbols);
           else
             res->join(std::move(new_symbols));
+          debug_info->appendSharedLibraries(lm.second);
         } catch (std::runtime_error& e) { std::cout << e.what() << std::endl; }
       }
 

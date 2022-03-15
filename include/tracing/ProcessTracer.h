@@ -1,8 +1,11 @@
 
 #pragma once
 
+#include "DebugInfo.h"
+#include "ELFParser.h"
 #include "Process.h"
 #include "RegistersSnapshot.h"
+#include "StackTrace.h"
 #include <filesystem>
 #include <memory>
 #include <shared_mutex>
@@ -32,7 +35,17 @@ namespace ldb {
     static std::unique_ptr<ProcessTracer> fromCommand(const std::string& executable,
                                                       const std::vector<std::string>& args);
 
-    ProcessTracer(Process&& process, std::string executable);
+    /**
+     * @brief Builds a new tracer from an existing process
+     * @param debug_info The debug infos read from the elf file
+     * @param process The process to trace. Must be different than nullptr, and already traced.
+     * @param executable The executable of the process.
+     * @param args The arguments used to launch the process.
+     */
+    ProcessTracer(std::unique_ptr<const DebugInfo>&& debug_info, std::unique_ptr<Process>&& process,
+                  std::string executable, std::vector<std::string> args);
+
+    bool restart();
 
     /**
      * @brief Yield the current process registers values
@@ -45,18 +58,18 @@ namespace ldb {
      * @return The path to the executable linked to this tracer, or an empty string if this data is
      * unavailable
      */
-    std::string getExecutable();
+    const std::string& getExecutable();
 
     Process& getProcess() {
-      return process;
+      return *process;
     }
 
     pid_t getPid() const {
-      return process.getPid();
+      return process->getPid();
     }
 
     Signal getLastSignal() const {
-      return process.getLastSignal();
+      return process->getLastSignal();
     }
 
     /**
@@ -84,7 +97,7 @@ namespace ldb {
      * @return
      */
     int getSlaveFd() {
-      return process.getSlaveFd();
+      return process->getSlaveFd();
     }
 
     /**
@@ -94,7 +107,7 @@ namespace ldb {
      * @return
      */
     int getMasterFd() {
-      return process.getMasterFd();
+      return process->getMasterFd();
     }
 
     /**
@@ -108,10 +121,17 @@ namespace ldb {
      * @return A vector containing the full stacktrace of the process, or an empty vector if this
      * data is unavailable
      */
-    // std::unique_ptr<StackTrace> getStackTrace();
+    std::unique_ptr<StackTrace> getStackTrace();
 
     Process::Status getProcessStatus() {
-      return process.getStatus();
+      return process->getStatus();
+    }
+
+    const DebugInfo* getDebugInfo() {
+      if (not debug_info and isProbeableStatus(process->getStatus())) {
+        debug_info = readDebugInfo(executable_path, *process);
+      }
+      return debug_info.get();
     }
 
   private:
@@ -120,11 +140,12 @@ namespace ldb {
      */
     std::shared_mutex main_mutex;
 
-    Process process;
+    std::unique_ptr<Process> process;
 
     std::string executable_path;
 
-    // SymbolTable symbols;
+    std::vector<std::string> arguments;
+    std::unique_ptr<const DebugInfo> debug_info;
   };
 
 }// namespace ldb

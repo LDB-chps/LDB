@@ -1,5 +1,5 @@
-#include "tracerToolBar.h"
-#include "gui/tracerPanel.h"
+#include "TracerToolBar.h"
+#include "gui/TracerPanel.h"
 #include <QLabel>
 
 namespace ldb::gui {
@@ -9,7 +9,7 @@ namespace ldb::gui {
 
     // Open a new program
     action_open_folder = new QAction(QIcon(":/icons/folder-open-fill.png"), "Start command");
-    connect(action_open_folder, &QAction::triggered, this, &TracerToolBar::openCommand);
+    connect(action_open_folder, &QAction::triggered, parent, &TracerPanel::displayCommandDialog);
     addAction(action_open_folder);
 
     // Program execution section
@@ -20,9 +20,9 @@ namespace ldb::gui {
     action_reset->setEnabled(false);
     // action_reset->setEnabled(false);
     addAction(action_reset);
-    connect(action_reset, &QAction::triggered, parent, &TracerPanel::maybeRestartExecution);
+    connect(action_reset, &QAction::triggered, parent, &TracerPanel::restartExecution);
 
-    action_toggle_play = new QAction(QIcon(":/icons/play-fill.png"), "Play");
+    action_toggle_play = new QAction(QIcon(":/icons/play-fill.png"), "Play/Pause");
     action_toggle_play->setEnabled(false);
     // action_toggle_play->setEnabled(false);
     addAction(action_toggle_play);
@@ -32,7 +32,7 @@ namespace ldb::gui {
     action_stop->setEnabled(false);
     // action_stop->setEnabled(false);
     addAction(action_stop);
-    connect(action_stop, &QAction::triggered, parent, &TracerPanel::maybeEndExecution);
+    connect(action_stop, &QAction::triggered, parent, &TracerPanel::stopExecution);
 
     label_pid = new QLabel("PID: ");
     addWidget(label_pid);

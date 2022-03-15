@@ -1,6 +1,6 @@
 
 set(CURRENT_INCLUDE_DIR ${INCLUDE_DIR}/gui/logging)
-qt_add_library(logging
+add_library(logging
         qtLogHandler.cpp ${CURRENT_INCLUDE_DIR}/qtLogHandler.h
         logWidget.cpp ${CURRENT_INCLUDE_DIR}/logWidget.h
         )

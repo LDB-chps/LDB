@@ -90,10 +90,10 @@ namespace ldb {
   }
 
   Process::~Process() {
-    std::scoped_lock<std::shared_mutex> lock(mutex);
-    if (pid != -1) return;
+    if (pid == -1) return;
 
-    if (status == Status::kRunning or status == Status::kStopped) kill();
+    if (status != Status::kDead) kill();
+
     // Close all pipes if they are still open
     // No need to check for failure since those pipes cannot be used after we return from this
     // destructor
@@ -102,12 +102,18 @@ namespace ldb {
   }
 
   // Mutexes are non-copyable, so we cannot use the default move operators
-  Process::Process(Process&& other) noexcept : master_fd(-1), slave_fd(-1) {
+  Process::Process(Process&& other) noexcept : pid(-1), master_fd(-1), slave_fd(-1) {
     *this = std::move(other);
   }
 
   Process& Process::operator=(Process&& other) noexcept {
+
+    // If we're replacing the current process with another one, we must first stop it
+    // To avoid creating zombies
+    if (pid != -1 and other.pid != pid) kill();
+
     std::scoped_lock<std::shared_mutex> lock(mutex);
+
     pid = other.pid;
     status = other.status;
     master_fd = other.master_fd;
@@ -129,7 +135,7 @@ namespace ldb {
     auto res = Process::fork(pipe_output);
 
     if (res->getPid() == 0) {
-      ptrace(PTRACE_TRACEME, 0, nullptr, nullptr);
+      ptrace(PTRACE_TRACEME, 0, PTRACE_O_EXITKILL | PTRACE_O_TRACEEXEC, nullptr);
 
       // Build a vector containing all the arguments
       std::vector<const char*> argv_c;
@@ -163,6 +169,7 @@ namespace ldb {
     }
 
     if (res->getPid() == -1) { throw std::runtime_error("Failed to fork"); }
+    res->is_attached = true;
     return res;
   }
 
@@ -241,7 +248,8 @@ namespace ldb {
 
   bool Process::kill() {
     std::scoped_lock<std::shared_mutex> lock(mutex);
-    if (::kill(pid, SIGTERM) == 0) {
+    if (status == Status::kDead) return true;
+    if (::kill(pid, SIGKILL) == 0) {
       waitpid(pid, nullptr, 0);
       status = Status::kDead;
       return true;
@@ -258,7 +266,7 @@ namespace ldb {
   }
 
   bool isProbeableStatus(Process::Status status) {
-    return status == Process::Status::kStopped or status == Process::Status::kKilled;
+    return status != Process::Status::kRunning and status != Process::Status::kDead;
   }
 
 }// namespace ldb

@@ -17,7 +17,7 @@ namespace ldb::gui {
   class PtyHandler : public QWidget {
   public:
     PtyHandler(QWidget* parent, int fd);
-    void setPTy(int fd);
+    void reassignTo(int fd);
 
   public slots:
     void sendInput();

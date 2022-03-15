@@ -1,21 +1,23 @@
 #pragma once
 
-#include "tracerView.h"
-#include <QTreeView>
+#include "TracerView.h"
 #include <ProcessTracer.h>
+#include <QTreeWidget>
 
 namespace ldb::gui {
 
-  class StackTraceView : public QTreeView {
+  class StackTraceView : public QTreeWidget, public TracerView {
     Q_OBJECT
   public:
-    explicit StackTraceView(QWidget* parent = nullptr);
+    explicit StackTraceView(TracerPanel* parent);
+
+  public slots:
 
     /**
      * @brief Update the view to reflect the tracer state
      * @param tracer A pointer to the tracer. If nullptr, the view should present a blank state.
      */
-    void update(ProcessTracer* tracer) {}
+    void updateView();
 
   private:
   };

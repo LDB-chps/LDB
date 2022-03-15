@@ -1,4 +1,4 @@
-#include "codeView.h"
+#include "CodeView.h"
 #include <QFile>
 #include <QLayout>
 #include <QPainter>
