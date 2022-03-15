@@ -10,6 +10,7 @@
 #include <sys/ptrace.h>
 #include <sys/wait.h>
 #include <utility>
+#include "DwarfReader.h"
 
 // Parsing elf / dwarf data proved to be a bit of a pain since there's no official tutorial or such
 // except for the Standard specifications.
@@ -60,9 +61,6 @@ namespace ldb {
        * @param process
        */
       bool parseDynamicSymbols(Process& process);
-      bool parseDwarf() {
-        return true;
-      }
 
       std::unique_ptr<DebugInfo> yieldDebugInfo() {
         return std::move(debug_info);
@@ -142,7 +140,7 @@ namespace ldb {
         return;
       }
 
-      // readDwarf(elf, debug_info.get());
+      readDwarfDebugInfo(elf, *debug_info.get());
       elf_end(elf);
     }
 
@@ -226,7 +224,7 @@ namespace ldb {
           }
 
           std::string name(sym_str_table.data() + sym.st_name);
-          buff->emplace_back(sym.st_value, name, std::nullopt);
+          buff->emplace_back(sym.st_value, name, "");
         }
         if (not symbols) {
           symbols = std::move(buff);

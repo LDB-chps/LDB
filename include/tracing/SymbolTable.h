@@ -51,7 +51,6 @@ namespace ldb {
     void join(std::unique_ptr<SymbolTable>&& other);
 
 
-
     using iterator = std::vector<Symbol>::iterator;
     using const_iterator = std::vector<Symbol>::const_iterator;
 
@@ -72,6 +71,7 @@ namespace ldb {
   private:
     std::vector<Symbol> symbols;
     std::unique_ptr<SymbolTable> next;
+    std::string file;
   };
 
 

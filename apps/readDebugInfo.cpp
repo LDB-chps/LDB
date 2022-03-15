@@ -14,15 +14,5 @@ int main(int argc, char* argv[]) {
   if (not infos) return 1;
   std::cout << *infos->getSymbolTable() << std::endl;
 
-
-  int fd = open("/home/johnkyky/Documents/elf/pid", O_RDONLY);
-  if (fd == -1) {
-    std::cout << "error" << std::endl;
-    exit(100);
-  }
-
-  ldb::DwarfReader reader(fd);
-  reader.populateDwarf(infos.get()->getSymbolTable());
-
   return 0;
 }

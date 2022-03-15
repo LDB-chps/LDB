@@ -3,6 +3,7 @@
 #include <filesystem>
 #include <iostream>
 #include <optional>
+#include <vector>
 
 namespace ldb {
 
@@ -14,6 +15,9 @@ namespace ldb {
   public:
     friend std::ostream& operator<<(std::ostream& os, const Symbol& symbol);
 
+    Symbol(const std::string& strName, const std::string& strType)
+        : addr(0), name(strName), line(0), type(strType) {}
+
     /**
      * @brief Construct a new symbol
      * @param addr The address of this symbol. This may be relative to the source file, or the
@@ -21,7 +25,7 @@ namespace ldb {
      * @param name The name of this symbol.
      * @param file An optional file path, if it is known
      */
-    Symbol(Elf64_Addr addr, std::string name, std::optional<std::filesystem::path> file)
+    Symbol(Elf64_Addr addr, std::string name, std::filesystem::path file)
         : addr(addr), name(name), file(file) {}
 
     /**
@@ -36,8 +40,12 @@ namespace ldb {
      * @brief Returns the file where this symbols is defined
      * @return Return an optional file path
      */
-    const std::optional<std::filesystem::path>& getFile() const {
+    const std::filesystem::path& getFile() const {
       return file;
+    }
+
+    void setFile(const std::string& strFile) {
+      file = std::filesystem::path(strFile);
     }
 
     /**
@@ -56,6 +64,42 @@ namespace ldb {
       return name;
     }
 
+    void setName(const std::string& strName) {
+      name = strName;
+    }
+
+    const size_t getLine() const {
+      return line;
+    }
+
+    void setLine(const size_t l) {
+      line = line;
+    }
+
+    const std::string& getType() const {
+      return type;
+    }
+
+    void setType(const std::string& strType) {
+      type = strType;
+    }
+
+    const std::vector<Symbol>& getArgs() const {
+      return args;
+    }
+
+    std::vector<Symbol>& getArgs() {
+      return args;
+    }
+
+    const std::vector<Symbol>& getVars() const {
+      return vars;
+    }
+
+    std::vector<Symbol>& getVars() {
+      return vars;
+    }
+
     /**
      * @brief compares two symbols for equality using their adresses
      * @param other
@@ -71,9 +115,12 @@ namespace ldb {
     }
 
   private:
-    std::optional<std::filesystem::path> file;
+    std::filesystem::path file;
     Elf64_Addr addr;
     std::string name;
+    size_t line;
+    std::string type;
+    std::vector<Symbol> args;
+    std::vector<Symbol> vars;
   };
-
 }// namespace ldb
