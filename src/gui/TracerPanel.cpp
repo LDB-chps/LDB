@@ -45,7 +45,7 @@ namespace ldb::gui {
     top_widget->setLayout(top_panel_layout);
     horizontal_splitter->addWidget(top_widget);
 
-    code_view = new CodeView(this);
+    code_view = new ObjdumpView(this);
     top_panel_layout->addWidget(code_view);
 
     // Setup the bottom panel
@@ -247,6 +247,7 @@ namespace ldb::gui {
     while (not done) {
       if (not process_tracer) { done = true; }
       auto status = process_tracer->waitNextEvent();
+
       if (status == Process::Status::kDead or status == Process::Status::kKilled or
           status == Process::Status::kUnknown) {
         done = true;

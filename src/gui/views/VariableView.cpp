@@ -22,7 +22,7 @@ namespace ldb::gui {
 
     registers->setAlternatingRowColors(true);
     registers->setSelectionBehavior(QAbstractItemView::SelectRows);
-    registers->setSelectionMode(QAbstractItemView::SingleSelection);
+    registers->setSelectionMode(QAbstractItemView::NoSelection);
     registers->setWordWrap(true);
     registers->setContextMenuPolicy(Qt::CustomContextMenu);
 

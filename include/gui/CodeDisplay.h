@@ -1,16 +1,11 @@
 #pragma once
-
-#include "TracerView.h"
-#include <ProcessTracer.h>
-#include <QLabel>
+#include <QPainter>
 #include <QPlainTextEdit>
-#include <QVBoxLayout>
+#include <QTextBlock>
 
 namespace ldb::gui {
 
   class CodeDisplay;
-
-  QString getObjdump(const QString& path);
 
   /**
    * @brief Helper class to display the line numbers in the code view.
@@ -66,43 +61,6 @@ namespace ldb::gui {
      * Set to -1 if no line is selected
      */
     int selected_line;
-  };
-
-  /**
-   * @brief The CodeView class is a QWidget that displays the source code of the
-   * currently selected process.
-   */
-  class CodeView : public QWidget, public TracerView {
-    Q_OBJECT
-  public:
-    explicit CodeView(TracerPanel* parent);
-
-  public slots:
-    /**
-     * @brief Open the given file in the code view. By default, no line is highlighted.
-     * @param path Path of the file to open
-     */
-    void openFile(const QString& path);
-
-    /**
-     * @brief Clear the code view
-     */
-    void closeFile();
-
-    /**
-     * @brief Highlight the given line
-     * @param line Index of the line to highlight. Set to -1 to disable the highlight
-     */
-    void setHighlightedLine(int line);
-
-    void updateCodeDisplay();
-
-  private:
-    std::string last_path;
-    QString file_path;
-    QLabel* label_file_path;
-    QVBoxLayout* layout;
-    CodeDisplay* code_display;
   };
 
 }// namespace ldb::gui

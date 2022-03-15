@@ -16,6 +16,8 @@ message(STATUS "CMAKE_MODULE_PATH: ${CMAKE_MODULE_PATH}")
 find_package(LibDwarf REQUIRED)
 find_package(Libunwind REQUIRED)
 message(STATUS ${LIBUNWIND_LIBRARIES})
+message(STATUS ${LIBDWARF_LIBRARIES})
+message(STATUS ${LIBELF_LIBRARIES})
 
 # TODO: Setup code coverage here
 # maybe_enable_code_coverage()

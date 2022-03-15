@@ -210,12 +210,7 @@ namespace ldb {
     // The status hasn't changed
     if (res == 0) return status;
     // Failed to find the process
-    if (res == -1) {
-      if (errno == ESRCH) {
-        return status = Status::kDead;
-      } else
-        return status = Status::kUnknown;
-    }
+    if (res == -1) { return status = Status::kDead; }
     if (WIFEXITED(s)) { return status = Status::kExited; }
     // Handle signals that can be caught
     if (WIFSTOPPED(s)) {
@@ -223,7 +218,18 @@ namespace ldb {
       // Instead of checking for fatal signals, we check for the stop signal and consider other
       // signals as fatal
       last_signal = static_cast<Signal>(WSTOPSIG(s));
-      if (WSTOPSIG(s) == SIGSTOP) { return status = Status::kStopped; }
+
+      // No need to stop for those signals which are usually ignored
+      if (WSTOPSIG(s) == SIGCHLD or WSTOPSIG(s) == SIGWINCH or WSTOPSIG(s) == SIGURG) {
+        ptrace(PTRACE_CONT, pid, nullptr, nullptr);
+        return status = Status::kStopped;
+      }
+
+      // Non fatal signals
+      if (WSTOPSIG(s) == SIGTRAP or WSTOPSIG(s) == SIGSTOP or WSTOPSIG(s) == SIGTTIN or
+          WSTOPSIG(s) == SIGTTOU or WSTOPSIG(s) == SIGTSTP) {
+        return status = Status::kStopped;
+      }
       return status = Status::kKilled;
     }
     // Handle signals that can't be caught

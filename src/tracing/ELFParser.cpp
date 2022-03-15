@@ -1,4 +1,5 @@
 #include "ELFParser.h"
+#include "DwarfReader.h"
 #include <algorithm>
 #include <boost/asio.hpp>
 #include <boost/core/demangle.hpp>
@@ -10,7 +11,6 @@
 #include <sys/ptrace.h>
 #include <sys/wait.h>
 #include <utility>
-#include "DwarfReader.h"
 
 // Parsing elf / dwarf data proved to be a bit of a pain since there's no official tutorial or such
 // except for the Standard specifications.
@@ -104,6 +104,7 @@ namespace ldb {
 
       std::unique_ptr<DebugInfo> debug_info;
       std::vector<Elf64_Shdr> sections;
+      std::filesystem::path elf_path;
 
       bool badbit;
     };
@@ -150,6 +151,7 @@ namespace ldb {
 
     void ELFFile::loadIntoMemory(const fs::path& elf_path) {
       std::ifstream file(elf_path, std::ios::binary);
+      this->elf_path = elf_path;
       if (!file.is_open()) { throw std::runtime_error("Failed to open file " + elf_path.string()); }
 
       file.seekg(0, std::ios::end);
@@ -209,8 +211,7 @@ namespace ldb {
         // Jump to the beginning of the symbol table
         char* dptr = data.get() + sec.sh_offset;
         size_t n_sym = sec.sh_size / sizeof(Elf64_Sym);
-        auto buff = std::make_unique<SymbolTable>(n_sym);
-
+        auto buff = std::make_unique<SymbolTable>(n_sym, elf_path);
 
         for (size_t i = 0; i < n_sym; i++) {
           Elf64_Sym sym;
@@ -361,6 +362,7 @@ namespace ldb {
           ELFFile elf(lm.second);
           auto deb_info = elf.yieldDebugInfo();
           auto new_symbols = deb_info->yieldSymbolTable();
+          if (not new_symbols) continue;
           new_symbols->relocate(lm.first);
 
           if (not res) res = std::move(new_symbols);
