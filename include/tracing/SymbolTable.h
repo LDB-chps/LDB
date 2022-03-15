@@ -72,7 +72,7 @@ namespace ldb {
   private:
     std::vector<Symbol> symbols;
     std::unique_ptr<SymbolTable> next;
+    std::filesystem::path object_file;
   };
-
 
 }// namespace ldb

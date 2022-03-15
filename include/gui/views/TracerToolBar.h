@@ -1,10 +1,9 @@
 #pragma once
 
-#include "tracerView.h"
+#include "TracerView.h"
+#include <ProcessTracer.h>
 #include <QLabel>
 #include <QToolBar>
-#include <ProcessTracer.h>
-#include "tracerView.h"
 
 namespace ldb::gui {
   class TracerToolBar : public QToolBar, public TracerView {

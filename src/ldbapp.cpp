@@ -3,7 +3,7 @@
 //
 
 #include "ldbapp.h"
-#include "mainWindow.h"
+#include "MainWindow.h"
 #include <QApplication>
 #include <QFile>
 #include <iostream>

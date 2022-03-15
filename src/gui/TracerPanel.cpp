@@ -1,6 +1,7 @@
-#include "tracerPanel.h"
+#include "TracerPanel.h"
+#include "CommandDialog.h"
+#include "LibraryView.h"
 #include "PtyHandler.h"
-#include "commandDialog.h"
 #include "logWidget.h"
 #include <QHBoxLayout>
 #include <QMessageBox>
@@ -94,7 +95,7 @@ namespace ldb::gui {
     information_tab->setTabIcon(1, QIcon(":/icons/view-module.png"));
 
     // Setup the tab where the loaded libraries will be displayed
-    auto libs = new QTextEdit(this);
+    auto libs = new LibraryView(this);
     information_tab->addTab(libs, "Loaded libraries");
     information_tab->setTabIcon(2, QIcon(":/icons/list-settings-line.png"));
   }

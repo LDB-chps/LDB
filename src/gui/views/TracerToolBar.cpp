@@ -1,5 +1,5 @@
-#include "tracerToolBar.h"
-#include "gui/tracerPanel.h"
+#include "TracerToolBar.h"
+#include "gui/TracerPanel.h"
 #include <QLabel>
 
 namespace ldb::gui {

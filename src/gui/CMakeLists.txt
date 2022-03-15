@@ -4,9 +4,9 @@ add_subdirectory(logging)
 
 set(CURRENT_INCLUDE_DIR ${INCLUDE_DIR}/gui)
 add_library(gui
-        mainWindow.cpp ${CURRENT_INCLUDE_DIR}/mainWindow.h
-        tracerPanel.cpp ${CURRENT_INCLUDE_DIR}/tracerPanel.h
-        commandDialog.cpp ${CURRENT_INCLUDE_DIR}/commandDialog.h
+        MainWindow.cpp ${CURRENT_INCLUDE_DIR}/MainWindow.h
+        TracerPanel.cpp ${CURRENT_INCLUDE_DIR}/TracerPanel.h
+        CommandDialog.cpp ${CURRENT_INCLUDE_DIR}/CommandDialog.h
         PtyHandler.cpp ${CURRENT_INCLUDE_DIR}/PtyHandler.h
         )
 target_include_directories(gui PUBLIC ${CURRENT_INCLUDE_DIR})

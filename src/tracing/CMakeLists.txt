@@ -16,5 +16,5 @@ add_library(tracing STATIC
         StackTrace.cpp ${CURRENT_INCLUDE_DIR}/StackTrace.h
         )
 target_include_directories(tracing PUBLIC ${CURRENT_INCLUDE_DIR})
-target_link_libraries(tracing PUBLIC TBB::tbb Threads::Threads ${LIBDWARF_LIBRARIES} ${LIBELF_LIBRARIES}
-        ${LIBUNWIND_LIBRARIES} unwind unwind-ptrace unwind-generic)
+target_link_libraries(tracing PUBLIC tscl::tscl TBB::tbb Threads::Threads ${LIBDWARF_LIBRARIES} ${LIBELF_LIBRARIES}
+        ${LIBUNWIND_LIBRARIES})

@@ -1,11 +1,11 @@
 #pragma once
 
+#include "CodeView.h"
 #include "ProcessTracer.h"
 #include "PtyHandler.h"
-#include "codeView.h"
-#include "stackTraceView.h"
-#include "tracerToolBar.h"
-#include "variableView.h"
+#include "StackTraceView.h"
+#include "TracerToolBar.h"
+#include "VariableView.h"
 #include <QGridLayout>
 #include <QThread>
 #include <QWidget>

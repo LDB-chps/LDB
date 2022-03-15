@@ -1,14 +1,16 @@
 
 #pragma once
 
+#include "DebugInfo.h"
+#include "ELFParser.h"
 #include "Process.h"
 #include "RegistersSnapshot.h"
+#include "StackTrace.h"
 #include <filesystem>
 #include <memory>
 #include <shared_mutex>
 #include <thread>
 #include <vector>
-#include "StackTrace.h"
 
 namespace ldb {
 
@@ -35,11 +37,13 @@ namespace ldb {
 
     /**
      * @brief Builds a new tracer from an existing process
+     * @param debug_info The debug infos read from the elf file
      * @param process The process to trace. Must be different than nullptr, and already traced.
      * @param executable The executable of the process.
      * @param args The arguments used to launch the process.
      */
-    ProcessTracer(std::unique_ptr<Process>&& process, std::string executable, std::vector<std::string> args);
+    ProcessTracer(std::unique_ptr<const DebugInfo>&& debug_info, std::unique_ptr<Process>&& process,
+                  std::string executable, std::vector<std::string> args);
 
     bool restart();
 
@@ -123,6 +127,13 @@ namespace ldb {
       return process->getStatus();
     }
 
+    const DebugInfo* getDebugInfo() {
+      if (not debug_info and isProbeableStatus(process->getStatus())) {
+        debug_info = readDebugInfo(executable_path, *process);
+      }
+      return debug_info.get();
+    }
+
   private:
     /** A thread is created to handle the process
      * Therefore, a lock is used to avoid concurency
@@ -134,6 +145,7 @@ namespace ldb {
     std::string executable_path;
 
     std::vector<std::string> arguments;
+    std::unique_ptr<const DebugInfo> debug_info;
   };
 
 }// namespace ldb

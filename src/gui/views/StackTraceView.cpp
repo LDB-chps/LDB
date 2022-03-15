@@ -1,5 +1,5 @@
-#include "stackTraceView.h"
-#include "gui/tracerPanel.h"
+#include "StackTraceView.h"
+#include "gui/TracerPanel.h"
 #include <QHeaderView>
 
 namespace ldb::gui {
@@ -21,8 +21,8 @@ namespace ldb::gui {
 
     QStringList headerLabels;
     headerLabels << "Adress"
-                 << "Function"
-                 << "Offset";
+                 << "Offset"
+                 << "Function";
     setHeaderLabels(headerLabels);
     header()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
     header()->setSectionResizeMode(1, QHeaderView::ResizeToContents);

@@ -1,10 +1,10 @@
 #pragma once
 
-#include "tracerView.h"
+#include "TracerView.h"
+#include <ProcessTracer.h>
 #include <QFrame>
 #include <QTabWidget>
 #include <QTableWidget>
-#include <ProcessTracer.h>
 
 namespace ldb::gui {
 

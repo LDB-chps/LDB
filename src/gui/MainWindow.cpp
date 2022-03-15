@@ -1,11 +1,11 @@
-#include "mainWindow.h"
+#include "MainWindow.h"
+#include <QApplication>
 #include <QFile>
 #include <QGridLayout>
 #include <QMenuBar>
 #include <QMessageBox>
 #include <QProgressBar>
 #include <QWidget>
-#include <QApplication>
 
 namespace ldb::gui {
   MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {

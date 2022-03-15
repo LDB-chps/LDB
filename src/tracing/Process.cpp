@@ -135,7 +135,7 @@ namespace ldb {
     auto res = Process::fork(pipe_output);
 
     if (res->getPid() == 0) {
-      ptrace(PTRACE_TRACEME, 0, nullptr, nullptr);
+      ptrace(PTRACE_TRACEME, 0, PTRACE_O_EXITKILL | PTRACE_O_TRACEEXEC, nullptr);
 
       // Build a vector containing all the arguments
       std::vector<const char*> argv_c;
@@ -169,6 +169,7 @@ namespace ldb {
     }
 
     if (res->getPid() == -1) { throw std::runtime_error("Failed to fork"); }
+    res->is_attached = true;
     return res;
   }
 

@@ -10,7 +10,6 @@
 namespace ldb {
   class DebugInfo {
   public:
-
     DebugInfo() = default;
 
     DebugInfo(const DebugInfo& other) = delete;
@@ -24,6 +23,14 @@ namespace ldb {
       return symbols_table.get();
     }
 
+    void appendSharedLibraries(std::filesystem::path shlib) {
+      shared_libraries.push_back(shlib);
+    }
+
+    const std::vector<std::filesystem::path>& getSharedLibraries() const {
+      return shared_libraries;
+    }
+
     std::unique_ptr<SymbolTable> yieldSymbolTable() {
       return std::move(symbols_table);
     }
@@ -33,9 +40,9 @@ namespace ldb {
     }
 
   private:
-
     std::filesystem::path executable_path;
     std::unique_ptr<SymbolTable> symbols_table;
+    std::vector<std::filesystem::path> shared_libraries;
   };
 
 }// namespace ldb

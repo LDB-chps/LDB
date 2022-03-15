@@ -1,5 +1,5 @@
-#include "variableView.h"
-#include "gui/tracerPanel.h"
+#include "VariableView.h"
+#include "gui/TracerPanel.h"
 #include <QGridLayout>
 #include <QHeaderView>
 #include <QLabel>
@@ -19,6 +19,13 @@ namespace ldb::gui {
     registers->horizontalHeader()->setVisible(true);
     registers->setSelectionBehavior(QAbstractItemView::SelectRows);
     registers->setEditTriggers(QAbstractItemView::NoEditTriggers);
+
+    registers->setAlternatingRowColors(true);
+    registers->setSelectionBehavior(QAbstractItemView::SelectRows);
+    registers->setSelectionMode(QAbstractItemView::SingleSelection);
+    registers->setWordWrap(true);
+    registers->setContextMenuPolicy(Qt::CustomContextMenu);
+
     QStringList headers;
     headers << "Register"
             << "Value";

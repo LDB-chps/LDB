@@ -1,8 +1,8 @@
 #pragma once
 
-#include "tracerView.h"
-#include <QTreeWidget>
+#include "TracerView.h"
 #include <ProcessTracer.h>
+#include <QTreeWidget>
 
 namespace ldb::gui {
 

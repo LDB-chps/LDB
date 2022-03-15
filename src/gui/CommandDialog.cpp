@@ -1,4 +1,4 @@
-#include "commandDialog.h"
+#include "CommandDialog.h"
 #include <QFileDialog>
 #include <QHBoxLayout>
 #include <QIcon>

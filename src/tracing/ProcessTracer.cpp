@@ -1,6 +1,7 @@
 #include "ProcessTracer.h"
 
 #include "RegistersSnapshot.h"
+#include <tscl.hpp>
 #include <utility>
 
 namespace ldb {
@@ -15,13 +16,14 @@ namespace ldb {
     process->waitNextEvent();
     process->resume();
 
-    return std::make_unique<ProcessTracer>(std::move(process), command, args);
+    return std::make_unique<ProcessTracer>(nullptr, std::move(process), command, args);
   }
 
-  ProcessTracer::ProcessTracer(std::unique_ptr<Process>&& process, std::string executable,
+  ProcessTracer::ProcessTracer(std::unique_ptr<const DebugInfo>&& debug_info,
+                               std::unique_ptr<Process>&& process, std::string executable,
                                std::vector<std::string> args)
-      : process(std::move(process)), executable_path(std::move(executable)),
-        arguments(std::move(args)) {
+      : debug_info(std::move(debug_info)), process(std::move(process)),
+        executable_path(std::move(executable)), arguments(std::move(args)) {
 
     if (not this->process) throw std::runtime_error("ProcessTracer: cannot trace a null process");
   }
@@ -72,7 +74,9 @@ namespace ldb {
    * @return The status of the process after the wait
    */
   Process::Status ProcessTracer::waitNextEvent() {
-    return process->waitNextEvent();
+    auto res = process->waitNextEvent();
+    std::scoped_lock lock(main_mutex);
+    return res;
   }
 
   std::unique_ptr<StackTrace> ProcessTracer::getStackTrace() {
