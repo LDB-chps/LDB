@@ -36,7 +36,7 @@ namespace ldb::gui {
     updateView();
 
     layout->addWidget(registers, 0, 0);
-    connect(parent, &TracerPanel::tracerUpdated, this, &VariableView::updateView);
+    connect(parent, &TracerPanel::signalReceived, this, &VariableView::updateView);
   }
 
 

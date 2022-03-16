@@ -55,9 +55,7 @@ namespace ldb {
   std::pair<const Symbol*, const SymbolTable*> SymbolTable::findInTable(Elf64_Addr addr) const {
     for (const SymbolTable* curr = this; curr != nullptr; curr = curr->next.get()) {
       for (const auto& sym : curr->symbols) {
-        if (sym.getAddress() == addr) { 
-          return {&sym, curr}; 
-        }
+        if (sym.getAddress() == addr) { return {&sym, curr}; }
       }
     }
     return {nullptr, nullptr};
@@ -68,7 +66,8 @@ namespace ldb {
 
     // Append the new table at the end of the list
     SymbolTable* curr = nullptr;
-    for (curr = this; curr->next; curr = curr->next.get());
+    for (curr = this; curr->next; curr = curr->next.get())
+      ;
     curr->next = std::move(other);
   }
 

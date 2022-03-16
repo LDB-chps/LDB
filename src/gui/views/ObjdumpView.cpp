@@ -83,7 +83,7 @@ namespace ldb::gui {
     layout->addWidget(code_display);
     new ObjdumpHighlighter(code_display->document());
 
-    connect(parent, &TracerPanel::tracerUpdated, this, &ObjdumpView::updateCodeDisplay);
+    connect(parent, &TracerPanel::signalReceived, this, &ObjdumpView::updateCodeDisplay);
 
     setLayout(layout);
   }
@@ -114,8 +114,7 @@ namespace ldb::gui {
     std::unique_ptr<StackTrace> stack_trace = nullptr;
     const SymbolTable* symtab = nullptr;
 
-    if (not(tracer = tracer_panel->getTracer()) or
-        not isProbeableStatus(tracer->getProcessStatus()) or
+    if (not(tracer = tracer_panel->getTracer()) or not tracer->getProcess().isProbeable() or
         not(stack_trace = tracer->getStackTrace()) or not tracer->getDebugInfo() or
         not(symtab = tracer->getDebugInfo()->getSymbolTable()))
       return;

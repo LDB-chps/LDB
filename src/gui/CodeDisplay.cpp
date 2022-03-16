@@ -5,7 +5,7 @@ namespace ldb::gui {
   CodeViewLineWidget::CodeViewLineWidget(CodeDisplay* cv) : QWidget(cv), code_view(cv) {}
 
   QSize CodeViewLineWidget::sizeHint() const {
-    return QSize(code_view->lineNumberWidth(), 0);
+    return {code_view->lineNumberWidth(), 0};
   }
 
   void CodeViewLineWidget::paintEvent(QPaintEvent* event) {
@@ -98,7 +98,7 @@ namespace ldb::gui {
 
     QTextEdit::ExtraSelection selection;
 
-    QColor line_color = QColor("#413F3F").lighter(160);
+    QColor line_color = QColor::fromRgb(64, 63, 63).lighter(160);
 
     selection.format.setBackground(line_color);
     selection.format.setProperty(QTextFormat::FullWidthSelection, true);

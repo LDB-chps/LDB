@@ -80,7 +80,9 @@ namespace ldb::gui {
   }
 
   void PtyHandler::appendOutput(QString text) {
-    output->append(text);
+    output->moveCursor(QTextCursor::End);
+    output->insertPlainText(text);
+    output->moveCursor(QTextCursor::End);
   }
 
   void PtyHandler::workerLoop() {
@@ -94,9 +96,8 @@ namespace ldb::gui {
 
       // Since we are running in another thread, we must append using signals to avoid sigsev
       if (bytes_read > 0) {
-        //
         QMetaObject::invokeMethod(this, "appendOutput", Qt::QueuedConnection,
-                                  Q_ARG(QString, QString::fromUtf8(buffer)));
+                                  Q_ARG(QString, QString::fromUtf8(buffer, bytes_read)));
       } else if (bytes_read <= 0) {
         // If the pty closes, we just stop the thread
         done = true;

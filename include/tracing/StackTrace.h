@@ -1,7 +1,7 @@
 #pragma once
-#include <vector>
-#include "Symbol.h"
 #include "StackFrame.h"
+#include "Symbol.h"
+#include <vector>
 
 namespace ldb {
 

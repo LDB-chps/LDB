@@ -5,7 +5,7 @@
 
 namespace ldb {
   StackTrace::StackTrace(ProcessTracer& tracer) {
-    pid_t pid = tracer.getPid();
+    pid_t pid = tracer.getProcess().getPid();
     unw_addr_space_t as = unw_create_addr_space(&_UPT_accessors, 0);
 
     void* context = _UPT_create(pid);

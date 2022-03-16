@@ -130,9 +130,7 @@ namespace ldb {
 
       auto* fun = symTable[str_name];
 
-      if (!fun) {
-        return;
-      }
+      if (!fun) { return; }
 
       fun->setLine(in_line);
       if (got_file) fun->setFile(file_tabl[in_file]);

@@ -29,15 +29,15 @@ namespace ldb {
 
   bool ProcessTracer::restart() {
     process = Process::fromCommand(executable_path, arguments, true);
-    if (not process) throw std::runtime_error("ProcessTracer: failed to restart the process");
-    process->waitNextEvent();
+    if (not process) throw std::runtime_error("ProcessTracer: failed to reset the process");
+    waitpid(process->getPid(), nullptr, 0);
     process->resume();
+    if (signal_handler) signal_handler->reset();
 
     return true;
   }
 
   std::unique_ptr<RegistersSnapshot> ProcessTracer::getRegistersSnapshot() const {
-    std::shared_lock<std::shared_mutex> lock(main_mutex);
     if (not isProbeableStatus(process->getStatus())) { return {}; }
 
     return std::make_unique<RegistersSnapshot>(*process);
@@ -48,8 +48,7 @@ namespace ldb {
     return executable_path;
   }
 
-  std::unique_ptr<StackTrace> ProcessTracer::getStackTrace() const {
-    std::shared_lock<std::shared_mutex> lock(main_mutex);
+  std::unique_ptr<StackTrace> ProcessTracer::getStackTrace() {
     return std::make_unique<StackTrace>(*this);
   }
 

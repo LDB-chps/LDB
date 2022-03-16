@@ -3,6 +3,7 @@
 #include "ObjdumpView.h"
 #include "ProcessTracer.h"
 #include "PtyHandler.h"
+#include "QtSignalHandler.h"
 #include "StackTraceView.h"
 #include "TracerToolBar.h"
 #include "VariableView.h"
@@ -50,7 +51,7 @@ namespace ldb::gui {
     /**
      * @brief Stop the process without killing the tracer
      */
-    void stopExecution();
+    void abortExecution();
 
     void restartExecution(bool force = false);
 
@@ -85,7 +86,7 @@ namespace ldb::gui {
      * @brief Emitted when the tracee changes status
      * For example, when it receives a signal, or its overal status is changed
      */
-    void tracerUpdated();
+    void signalReceived(SignalEvent event);
 
     /**
      * @brief Emitted when the tracee stops
@@ -93,9 +94,6 @@ namespace ldb::gui {
     void executionEnded();
 
   private:
-    void setupThreads();
-    void endThreads();
-
     void setupToolbar(QGridLayout* layout);
 
     void setupCodeView(QGridLayout* layout);

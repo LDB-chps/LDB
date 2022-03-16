@@ -81,6 +81,8 @@ namespace ldb {
      */
     ~Process();
 
+    void updateStatus(Status s);
+
     /**
      * @brief Process Handle should not be copyable to avoid concurrent access
      */
@@ -108,7 +110,7 @@ namespace ldb {
      * This function does not block and does not update the status, only the last known status.
      * @return
      */
-    Status getStatus();
+    Status getStatus() const;
 
     /**
      * @brief Returns true if the process is in a status that is available for probing via ptrace
@@ -116,12 +118,6 @@ namespace ldb {
      * To be able to be traced, a process must neither be dead nor running, in a "stopped" state
      */
     bool isProbeable() const;
-
-    /**
-     * @brief Wait for an even to happen and update the process status
-     * @return The new status
-     */
-    Signal waitNextEvent();
 
     /**
      * @brief Signal the process to resume execution.

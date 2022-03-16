@@ -15,7 +15,7 @@ namespace ldb::gui {
     setContextMenuPolicy(Qt::CustomContextMenu);
     setColumnCount(4);
 
-    connect(parent, &TracerPanel::tracerUpdated, this, &StackTraceView::updateView);
+    connect(parent, &TracerPanel::signalReceived, this, &StackTraceView::updateView);
     connect(parent, &TracerPanel::executionStarted, this, &QTreeWidget::clear);
     connect(parent, &TracerPanel::executionEnded, this, &QTreeWidget::clear);
 

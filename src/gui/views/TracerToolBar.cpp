@@ -32,7 +32,7 @@ namespace ldb::gui {
     action_stop->setEnabled(false);
     // action_stop->setEnabled(false);
     addAction(action_stop);
-    connect(action_stop, &QAction::triggered, parent, &TracerPanel::stopExecution);
+    connect(action_stop, &QAction::triggered, parent, &TracerPanel::abortExecution);
 
     label_pid = new QLabel("PID: ");
     addWidget(label_pid);
@@ -40,15 +40,16 @@ namespace ldb::gui {
     label_last_signal = new QLabel("");
     addWidget(label_last_signal);
 
-    connect(parent, &TracerPanel::tracerUpdated, this, &TracerToolBar::updateView);
-    connect(parent, &TracerPanel::executionEnded, this, &TracerToolBar::updateView);
-    connect(parent, &TracerPanel::executionStarted, this, &TracerToolBar::startView);
+    connect(parent, &TracerPanel::signalReceived, this, &TracerToolBar::updateView);
+    connect(parent, &TracerPanel::executionEnded, this, &TracerToolBar::updateButtons);
+    connect(parent, &TracerPanel::executionStarted, this, &TracerToolBar::updateButtons);
   }
 
   void TracerToolBar::startView() {
-    label_program_name->setText("Program: " +
-                                QString::fromStdString(tracer_panel->getTracer()->getExecutable()));
-    label_pid->setText("PID: " + QString::number(tracer_panel->getTracer()->getPid()));
+
+    auto* tracer = tracer_panel->getTracer();
+    label_program_name->setText("Program: " + QString::fromStdString(tracer->getExecutable()));
+    label_pid->setText("PID: " + QString::number(tracer->getProcess().getPid()));
 
     updateButtons();
   }
@@ -61,8 +62,8 @@ namespace ldb::gui {
 
     // Gather information about the current process
     if (tracer_panel->getTracer() != nullptr) {
-      status = tracer_panel->getTracer()->getProcessStatus();
-      ls = tracer_panel->getTracer()->getLastSignal();
+      auto* tracer = tracer_panel->getTracer();
+      status = tracer->getProcess().getStatus();
     }
 
     if (status == Process::Status::kStopped) {
@@ -80,14 +81,10 @@ namespace ldb::gui {
       action_reset->setEnabled(true);
       action_stop->setEnabled(false);
     }
-
-    if (ls != Signal::kUnknown)
-      label_last_signal->setText(
-              "Last signal: " +
-              QString::fromStdString(signalToString(tracer_panel->getTracer()->getLastSignal())));
   }
 
-  void TracerToolBar::updateView() {
+  void TracerToolBar::updateView(SignalEvent evt) {
     updateButtons();
+    label_last_signal->setText(QString::fromStdString(signalToString(evt.getSignal())));
   }
 }// namespace ldb::gui

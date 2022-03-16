@@ -76,7 +76,7 @@ namespace ldb {
       case Signal::kSIGIO:
         return "sigio: I/O now possible";
       case Signal::kSIGPWR:
-        return "sigpwr: Power failure restart";
+        return "sigpwr: Power failure reset";
       case Signal::kSIGSYS:
         return "sigsys: Bad system call";
     }
@@ -208,47 +208,19 @@ namespace ldb {
     return res;
   }
 
-  Process::Status Process::getStatus() {
+  Process::Status Process::getStatus() const {
     std::shared_lock<std::shared_mutex> lock(mutex);
     return status;
   }
 
-  Signal Process::waitNextEvent() {
-    int s;
-    int res = waitpid(pid, &s, 0);
-
-    // Lock the mutex before accessing the status
+  void Process::updateStatus(Status s) {
     std::scoped_lock<std::shared_mutex> lock(mutex);
-    // The status hasn't changed
-    if (res == 0) return Signal::kUnknown;
-    // Failed to find the process
-    if (res == -1) {
-      status = Status::kDead;
-      return Signal::kUnknown;
-    }
-    if (WIFEXITED(s)) {
-      status = Signal::kSIGQUIT;
-      return static_cast<Signal>(WTERMSIG(s))
-    }
-
-    // Handle signals that can be caught
-    if (WIFSTOPPED(s)) {
-      // ptrace stops when receiving any signal fatal or not.
-      // Instead of checking for fatal signals, we check for the stop signal and consider other
-      // signals as fatal
-      last_signal = static_cast<Signal>(WSTOPSIG(s));
-      int sig = WSTOPSIG(s);
-      status = Status::kStopped;
-      return static_cast<Signal>(sig);
-    }
-    // Handle signals that can't be caught
-    if (WIFSIGNALED(s)) {
-      status = Status::kKilled;
-      return static_cast<Signal>(WTERMSIG(s));
-    }
-    return Status::kUnknown;
+    status = s;
   }
 
+  bool Process::isProbeable() const {
+    return isProbeableStatus(status);
+  }
 
   bool Process::resume() {
     std::scoped_lock<std::shared_mutex> lock(mutex);

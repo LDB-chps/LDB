@@ -59,6 +59,18 @@ namespace ldb {
       return *process;
     }
 
+    void resume() {
+      process->resume();
+    }
+
+    void pause() {
+      process->pause();
+    }
+
+    void abort() {
+      process->kill();
+    }
+
     /**
      * @brief The process this tracer is attached to has its output redirected to a file
      * This functions returns the file descriptor of this file. This can be used for reading the
@@ -84,7 +96,7 @@ namespace ldb {
      * @return A vector containing the full stacktrace of the process, or an empty vector if this
      * data is unavailable
      */
-    std::unique_ptr<StackTrace> getStackTrace() const;
+    std::unique_ptr<StackTrace> getStackTrace();
 
     /**
      * @brief Yield the current process registers values
@@ -99,7 +111,14 @@ namespace ldb {
       return debug_info.get();
     }
 
-    bool setSignalHandler(std::unique_ptr<SignalHandler> sig_handler);
+    template<class Sighandler>
+    Sighandler* makeSignalHandler() {
+      auto tmp = std::make_unique<Sighandler>(process.get());
+      // Get the ret ptr before type casting to parent class
+      auto res = tmp.get();
+      signal_handler = std::move(tmp);
+      return res;
+    }
 
     SignalHandler* getSignalHandler() {
       return signal_handler.get();

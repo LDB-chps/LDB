@@ -24,7 +24,7 @@ namespace ldb::gui {
     setContextMenuPolicy(Qt::CustomContextMenu);
 
     connect(parent, &TracerPanel::executionStarted, this, &LibraryView::onExecutionStarted);
-    connect(parent, &TracerPanel::tracerUpdated, this, &LibraryView::onExecutionStarted);
+    connect(parent, &TracerPanel::signalReceived, this, &LibraryView::onExecutionStarted);
     connect(parent, &TracerPanel::executionEnded, this, &LibraryView::clearContents);
   }
 
