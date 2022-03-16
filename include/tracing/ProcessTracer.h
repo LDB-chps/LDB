@@ -5,6 +5,7 @@
 #include "ELFParser.h"
 #include "Process.h"
 #include "RegistersSnapshot.h"
+#include "SignalHandler.h"
 #include "StackTrace.h"
 #include <filesystem>
 #include <memory>
@@ -42,16 +43,8 @@ namespace ldb {
      * @param executable The executable of the process.
      * @param args The arguments used to launch the process.
      */
-    ProcessTracer(std::unique_ptr<const DebugInfo>&& debug_info, std::unique_ptr<Process>&& process,
-                  std::string executable, std::vector<std::string> args);
-
-    bool restart();
-
-    /**
-     * @brief Yield the current process registers values
-     * @return
-     */
-    std::unique_ptr<RegistersSnapshot> getRegistersSnapshot();
+    ProcessTracer(std::unique_ptr<Process>&& process, std::string executable,
+                  std::vector<std::string> args);
 
     /**
      * @brief Returns the path to the executable linked to this tracer
@@ -60,35 +53,11 @@ namespace ldb {
      */
     const std::string& getExecutable();
 
-    Process& getProcess() {
+    bool restart();
+
+    const Process& getProcess() const {
       return *process;
     }
-
-    pid_t getPid() const {
-      return process->getPid();
-    }
-
-    Signal getLastSignal() const {
-      return process->getLastSignal();
-    }
-
-    /**
-     * @brief Returns the current file the process is in
-     * @return A path to the source file, or an empty path if this data is unavailable
-     */
-    std::string getCurrentFile();
-
-    /**
-     * @brief Returns the current line the process is in
-     * @return The current line the process is in, or -1 if this data is unavailable
-     */
-    long getCurrentLineNumber();
-
-    /**
-     * @brief Returns the current function the process is in
-     * @return Returns the current function name, or an empty string if this data is unavailable
-     */
-    std::string getCurrentFunctionName();
 
     /**
      * @brief The process this tracer is attached to has its output redirected to a file
@@ -96,7 +65,7 @@ namespace ldb {
      * output to a QtWindow
      * @return
      */
-    int getSlaveFd() {
+    int getSlavePtty() {
       return process->getSlaveFd();
     }
 
@@ -106,26 +75,22 @@ namespace ldb {
      * output to a QtWindow
      * @return
      */
-    int getMasterFd() {
+    int getMasterPtty() {
       return process->getMasterFd();
     }
-
-    /**
-     * @brief Block until the process receives a signal or terminates
-     * @return The status of the process after the wait
-     */
-    Process::Status waitNextEvent();
 
     /**
      * @brief Returns a vector containing the full stacktrace of the process
      * @return A vector containing the full stacktrace of the process, or an empty vector if this
      * data is unavailable
      */
-    std::unique_ptr<StackTrace> getStackTrace();
+    std::unique_ptr<StackTrace> getStackTrace() const;
 
-    Process::Status getProcessStatus() {
-      return process->getStatus();
-    }
+    /**
+     * @brief Yield the current process registers values
+     * @return
+     */
+    std::unique_ptr<RegistersSnapshot> getRegistersSnapshot() const;
 
     const DebugInfo* getDebugInfo() {
       if (not debug_info and isProbeableStatus(process->getStatus())) {
@@ -134,18 +99,21 @@ namespace ldb {
       return debug_info.get();
     }
 
-  private:
-    /** A thread is created to handle the process
-     * Therefore, a lock is used to avoid concurency
-     */
-    std::shared_mutex main_mutex;
+    bool setSignalHandler(std::unique_ptr<SignalHandler> sig_handler);
 
+    SignalHandler* getSignalHandler() {
+      return signal_handler.get();
+    }
+
+  private:
     std::unique_ptr<Process> process;
 
     std::string executable_path;
-
     std::vector<std::string> arguments;
+
     std::unique_ptr<const DebugInfo> debug_info;
+
+    std::unique_ptr<SignalHandler> signal_handler;
   };
 
 }// namespace ldb

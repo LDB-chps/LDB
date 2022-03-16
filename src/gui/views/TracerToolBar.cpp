@@ -55,8 +55,10 @@ namespace ldb::gui {
 
   void TracerToolBar::updateButtons() {
 
+    label_last_signal->setText("");
     auto status = Process::Status::kDead;
     auto ls = Signal::kUnknown;
+
     // Gather information about the current process
     if (tracer_panel->getTracer() != nullptr) {
       status = tracer_panel->getTracer()->getProcessStatus();
@@ -83,8 +85,6 @@ namespace ldb::gui {
       label_last_signal->setText(
               "Last signal: " +
               QString::fromStdString(signalToString(tracer_panel->getTracer()->getLastSignal())));
-    else
-      label_last_signal->setText("");
   }
 
   void TracerToolBar::updateView() {

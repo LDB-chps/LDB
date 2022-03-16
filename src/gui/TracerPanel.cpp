@@ -11,6 +11,7 @@
 #include <QToolButton>
 #include <QVBoxLayout>
 #include <boost/algorithm/string.hpp>
+#include <sys/ptrace.h>
 #include <tscl.hpp>
 
 namespace ldb::gui {
@@ -109,7 +110,7 @@ namespace ldb::gui {
     endThreads();
     if (not process_tracer) return;
 
-    pty_handler->reassignTo(process_tracer->getMasterFd());
+    pty_handler->reassignTo(process_tracer->getMasterPtty());
     update_thread = QThread::create(&TracerPanel::updateLoop, this);
     update_thread->start();
   }
@@ -244,6 +245,8 @@ namespace ldb::gui {
 
   void TracerPanel::updateLoop() {
     bool done = false;
+    if (not process_tracer) return;
+
     while (not done) {
       if (not process_tracer) { done = true; }
       auto status = process_tracer->waitNextEvent();

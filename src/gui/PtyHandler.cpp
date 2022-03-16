@@ -16,6 +16,7 @@ namespace ldb::gui {
     output->setReadOnly(true);
     output->setFontPointSize(11);
     output->setTextColor(Qt::white);
+    output->document()->setMaximumBlockCount(250);
     layout->addWidget(output, 0, 0, 1, 2);
     connect(output, &QTextEdit::textChanged, this, &PtyHandler::scrollToBottom);
 
@@ -78,6 +79,10 @@ namespace ldb::gui {
     thread->start();
   }
 
+  void PtyHandler::appendOutput(QString text) {
+    output->append(text);
+  }
+
   void PtyHandler::workerLoop() {
     bool done = false;
     char buffer[1024];
@@ -89,8 +94,9 @@ namespace ldb::gui {
 
       // Since we are running in another thread, we must append using signals to avoid sigsev
       if (bytes_read > 0) {
-        QMetaObject::invokeMethod(output, "insertPlainText", Qt::QueuedConnection,
-                                  Q_ARG(QString, QString::fromUtf8(buffer, bytes_read)));
+        //
+        QMetaObject::invokeMethod(this, "appendOutput", Qt::QueuedConnection,
+                                  Q_ARG(QString, QString::fromUtf8(buffer)));
       } else if (bytes_read <= 0) {
         // If the pty closes, we just stop the thread
         done = true;

@@ -16,6 +16,7 @@ qt_add_library(tracing STATIC
         DwarfReader.cpp ${CURRENT_INCLUDE_DIR}/DwarfReader.h
         StackFrame.cpp ${CURRENT_INCLUDE_DIR}/StackFrame.h
         StackTrace.cpp ${CURRENT_INCLUDE_DIR}/StackTrace.h
+        SignalHandler.cpp ${CURRENT_INCLUDE_DIR}/SignalHandler.h
         )
 target_include_directories(tracing PUBLIC ${CURRENT_INCLUDE_DIR})
 target_link_libraries(tracing PUBLIC tscl::tscl TBB::tbb Threads::Threads ${LIBDWARF_LIBRARIES} ${LIBELF_LIBRARIES}
