@@ -1,8 +1,9 @@
 #pragma once
 
-#include "CodeView.h"
+#include "ObjdumpView.h"
 #include "ProcessTracer.h"
 #include "PtyHandler.h"
+#include "QtSignalHandler.h"
 #include "StackTraceView.h"
 #include "TracerToolBar.h"
 #include "VariableView.h"
@@ -50,7 +51,7 @@ namespace ldb::gui {
     /**
      * @brief Stop the process without killing the tracer
      */
-    void stopExecution();
+    void abortExecution();
 
     void restartExecution(bool force = false);
 
@@ -66,7 +67,8 @@ namespace ldb::gui {
      * @param command The command to start
      * @param args The arguments to pass to the command
      */
-    bool startExecution(const std::string& command, const std::vector<std::string>& args, bool force = false);
+    bool startExecution(const std::string& command, const std::vector<std::string>& args,
+                        bool force = false);
 
     /**
      * @brief Stop the current program if any.
@@ -84,7 +86,7 @@ namespace ldb::gui {
      * @brief Emitted when the tracee changes status
      * For example, when it receives a signal, or its overal status is changed
      */
-    void tracerUpdated();
+    void signalReceived(SignalEvent event);
 
     /**
      * @brief Emitted when the tracee stops
@@ -92,16 +94,6 @@ namespace ldb::gui {
     void executionEnded();
 
   private:
-
-    void setupThreads();
-    void endThreads();
-
-    /**
-     * @brief Loop function on which a new thread is created to periodically update the tracee
-     * status
-     */
-    void updateLoop();
-
     void setupToolbar(QGridLayout* layout);
 
     void setupCodeView(QGridLayout* layout);
@@ -116,7 +108,7 @@ namespace ldb::gui {
     TracerToolBar* toolbar = nullptr;
     VariableView* variable_view = nullptr;
     StackTraceView* stack_trace_view = nullptr;
-    CodeView* code_view = nullptr;
+    ObjdumpView* code_view = nullptr;
     PtyHandler* pty_handler = nullptr;
   };
 }// namespace ldb::gui

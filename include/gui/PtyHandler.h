@@ -15,6 +15,7 @@ namespace ldb::gui {
    * This class is use for communication with the process that is running in the background.
    */
   class PtyHandler : public QWidget {
+    Q_OBJECT
   public:
     PtyHandler(QWidget* parent, int fd);
     void reassignTo(int fd);
@@ -23,9 +24,10 @@ namespace ldb::gui {
     void sendInput();
     void scrollToBottom();
 
-  private:
+    void appendOutput(QString text);
 
-    QThread *thread;
+  private:
+    QThread* thread;
     void workerLoop();
 
     int pty_fd;

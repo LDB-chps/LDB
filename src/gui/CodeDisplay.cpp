@@ -1,15 +1,11 @@
-#include "CodeView.h"
-#include <QFile>
-#include <QLayout>
-#include <QPainter>
-#include <QTextBlock>
+#include "CodeDisplay.h"
 
 namespace ldb::gui {
 
   CodeViewLineWidget::CodeViewLineWidget(CodeDisplay* cv) : QWidget(cv), code_view(cv) {}
 
   QSize CodeViewLineWidget::sizeHint() const {
-    return QSize(code_view->lineNumberWidth(), 0);
+    return {code_view->lineNumberWidth(), 0};
   }
 
   void CodeViewLineWidget::paintEvent(QPaintEvent* event) {
@@ -26,6 +22,7 @@ namespace ldb::gui {
     connect(this, &CodeDisplay::blockCountChanged, this, &CodeDisplay::updateLineNumberWidth);
     connect(this, &CodeDisplay::updateRequest, this, &CodeDisplay::updateLineNumber);
     connect(this, &CodeDisplay::cursorPositionChanged, this, &CodeDisplay::highlightCurrentLine);
+
 
     updateLineNumberWidth(0);
     highlightCurrentLine();
@@ -101,7 +98,7 @@ namespace ldb::gui {
 
     QTextEdit::ExtraSelection selection;
 
-    QColor line_color = QColor("#312F2F").lighter(160);
+    QColor line_color = QColor::fromRgb(64, 63, 63).lighter(160);
 
     selection.format.setBackground(line_color);
     selection.format.setProperty(QTextFormat::FullWidthSelection, true);
@@ -112,43 +109,6 @@ namespace ldb::gui {
     selection.cursor.clearSelection();
     extra_selections.append(selection);
     setExtraSelections(extra_selections);
-  }
-
-  CodeView::CodeView(QWidget* parent) : QWidget(parent) {
-    layout = new QVBoxLayout;
-    layout->setSpacing(0);
-    layout->setContentsMargins(0, 0, 0, 0);
-
-    label_file_path = new QLabel(this);
-    label_file_path->setText("No file to display");
-    layout->addWidget(label_file_path);
-
-    code_display = new CodeDisplay(this);
-    code_display->setSelectedLine(-1);
-    layout->addWidget(code_display);
-
-    setLayout(layout);
-  }
-
-  void CodeView::openFile(const QString& path) {
-    QFile file(path);
-    if (file.open(QIODevice::ReadOnly)) {
-      file_path = path;
-      label_file_path->setText(path);
-      QString text = file.readAll();
-      code_display->setPlainText(text);
-      setHighlightedLine(-1);
-    }
-  }
-
-  void CodeView::closeFile() {
-    file_path = "";
-    label_file_path->setText("Mo file to display");
-    code_display->setPlainText("");
-  }
-
-  void CodeView::setHighlightedLine(int line) {
-    code_display->setSelectedLine(line);
   }
 
 }// namespace ldb::gui

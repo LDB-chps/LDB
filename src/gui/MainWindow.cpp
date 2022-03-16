@@ -25,7 +25,7 @@ namespace ldb::gui {
     QMenuBar* menu_bar = new QMenuBar(this);
     // File menu for loading new program and quitting
     QMenu* file_menu = menu_bar->addMenu("File");
-    QAction* refresh_css  = file_menu->addAction("Refresh CSS");
+    QAction* refresh_css = file_menu->addAction("Refresh CSS");
     connect(refresh_css, &QAction::triggered, this, &MainWindow::refreshCSS);
 
     QAction* load_action =

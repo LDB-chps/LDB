@@ -22,7 +22,7 @@ namespace ldb::gui {
 
     registers->setAlternatingRowColors(true);
     registers->setSelectionBehavior(QAbstractItemView::SelectRows);
-    registers->setSelectionMode(QAbstractItemView::SingleSelection);
+    registers->setSelectionMode(QAbstractItemView::NoSelection);
     registers->setWordWrap(true);
     registers->setContextMenuPolicy(Qt::CustomContextMenu);
 
@@ -36,7 +36,7 @@ namespace ldb::gui {
     updateView();
 
     layout->addWidget(registers, 0, 0);
-    connect(parent, &TracerPanel::tracerUpdated, this, &VariableView::updateView);
+    connect(parent, &TracerPanel::signalReceived, this, &VariableView::updateView);
   }
 
 

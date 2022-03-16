@@ -6,10 +6,19 @@ namespace ldb {
 
   class StackFrame {
   public:
-    StackFrame(std::string function_name, Elf64_Addr addr, Elf64_Off offset, Symbol* symbol);
+    StackFrame(Elf64_Addr addr, Elf64_Off offset, const Symbol* symbol);
+    StackFrame(std::string fun_name, Elf64_Addr addr, Elf64_Off offset);
 
     const std::string& getFunctionName() const {
-      return function_name;
+      if (symbol) {
+        return symbol->getName();
+      } else {
+        return name;
+      }
+    }
+
+    const Symbol* getSymbol() const {
+      return symbol;
     }
 
     Elf64_Addr getAddress() const {
@@ -20,15 +29,11 @@ namespace ldb {
       return offset;
     }
 
-    Symbol* getSymbol() const {
-      return symbol;
-    }
-
   private:
-    std::string function_name;
+    std::string name;
     Elf64_Addr address;
     Elf64_Off offset;
-    Symbol* symbol;
+    const Symbol* symbol;
   };
 
 }// namespace ldb

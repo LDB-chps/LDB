@@ -76,33 +76,42 @@ namespace ldb {
       case Signal::kSIGIO:
         return "sigio: I/O now possible";
       case Signal::kSIGPWR:
-        return "sigpwr: Power failure restart";
+        return "sigpwr: Power failure reset";
       case Signal::kSIGSYS:
         return "sigsys: Bad system call";
     }
     return "Unknown signal";
   }
 
-  Process::Process(pid_t pid) : pid(pid) {
+  Process::Process(pid_t pid, ClosePolicy cp) : pid(pid), close_policy(cp) {
     if (pid != -1) status = getStatus();
-    master_fd = -1;
-    slave_fd = -1;
+    master_ptty = -1;
+    slave_ptty = -1;
   }
 
   Process::~Process() {
-    if (pid == -1) return;
+    if (pid <= 0) return;
 
-    if (status != Status::kDead) kill();
+    // Close all ptty if they are still open
+    if (master_ptty >= 0) close(master_ptty);
+    if (slave_ptty >= 0) close(slave_ptty);
 
-    // Close all pipes if they are still open
-    // No need to check for failure since those pipes cannot be used after we return from this
-    // destructor
-    close(master_fd);
-    close(slave_fd);
+    if (close_policy == ClosePolicy::kKill) {
+      // Kill the process
+      ::kill(pid, SIGKILL);
+      waitpid(pid, nullptr, 0);
+    }
+    // Detach the process
+    else if (close_policy == ClosePolicy::kDetach and is_attached) {
+      ::ptrace(PTRACE_DETACH, pid, nullptr, nullptr);
+    } else if (close_policy == ClosePolicy::kWait) {
+      // Wait for the process to exit
+      waitpid(pid, nullptr, 0);
+    }
   }
 
   // Mutexes are non-copyable, so we cannot use the default move operators
-  Process::Process(Process&& other) noexcept : pid(-1), master_fd(-1), slave_fd(-1) {
+  Process::Process(Process&& other) noexcept : pid(-1), master_ptty(-1), slave_ptty(-1) {
     *this = std::move(other);
   }
 
@@ -116,26 +125,31 @@ namespace ldb {
 
     pid = other.pid;
     status = other.status;
-    master_fd = other.master_fd;
-    slave_fd = other.slave_fd;
+    master_ptty = other.master_ptty;
+    slave_ptty = other.slave_ptty;
 
     other.pid = -1;
     other.status = Status::kUnknown;
-    other.master_fd = -1;
-    other.slave_fd = -1;
+    other.master_ptty = -1;
+    other.slave_ptty = -1;
     return *this;
   }
 
 
   std::unique_ptr<Process> Process::fromCommand(const std::string& command,
                                                 const std::vector<std::string>& args,
-                                                bool pipe_output) {
+                                                bool pipe_output, ClosePolicy close_policy) {
+
     // In the case where we want to pipe the output, we must creates the pipes before forking
     // Thus we temporarily init the process with a -1 pid
-    auto res = Process::fork(pipe_output);
+    auto res = Process::fork(pipe_output, close_policy);
 
     if (res->getPid() == 0) {
-      ptrace(PTRACE_TRACEME, 0, PTRACE_O_EXITKILL | PTRACE_O_TRACEEXEC, nullptr);
+      int start_flags = PTRACE_O_TRACEEXEC;
+      // Prevent the child from becoming a zombie if the trqcer dies
+      if (close_policy == ClosePolicy::kKill) start_flags |= PTRACE_O_EXITKILL;
+
+      ptrace(PTRACE_TRACEME, 0, start_flags, nullptr);
 
       // Build a vector containing all the arguments
       std::vector<const char*> argv_c;
@@ -152,11 +166,11 @@ namespace ldb {
 
       if (pipe_output) {
         // Redirect both stdout and stderr to the pipe
-        dup2(res->slave_fd, STDOUT_FILENO);
-        dup2(res->slave_fd, STDERR_FILENO);
+        dup2(res->slave_ptty, STDOUT_FILENO);
+        dup2(res->slave_ptty, STDERR_FILENO);
 
         // Redirect the pipe to stdin
-        dup2(res->slave_fd, STDIN_FILENO);
+        dup2(res->slave_ptty, STDIN_FILENO);
       }
 
       // Unfortunately, execvp does not respect constness
@@ -173,64 +187,40 @@ namespace ldb {
     return res;
   }
 
-  std::unique_ptr<Process> Process::fork(bool create_pty) {
-    auto res = std::make_unique<Process>(0);
+  std::unique_ptr<Process> Process::fork(bool create_pty, ClosePolicy close_policy) {
+    auto res = std::make_unique<Process>(0, close_policy);
 
     // We need to creates the pipes before forking
-    if (create_pty and openpty(&res->master_fd, &res->slave_fd, nullptr, nullptr, nullptr)) {
-
+    if (create_pty and openpty(&res->master_ptty, &res->slave_ptty, nullptr, nullptr, nullptr)) {
       throw std::runtime_error("Failed to create pipes");
     }
     // By default, the pty has echo enabled, meaning that the user will see what he types
     // We disable this by changing the terminal settings
     termios tty_param = {};
-    tcgetattr(res->master_fd, &tty_param);
+    tcgetattr(res->master_ptty, &tty_param);
     tty_param.c_lflag &= ~ECHO;
-    tcsetattr(res->master_fd, TCSANOW, &tty_param);
+    tcsetattr(res->master_ptty, TCSANOW, &tty_param);
 
     // Required before the slave pty can be used
-    unlockpt(res->slave_fd);
-
+    unlockpt(res->slave_ptty);
 
     res->pid = ::fork();
     return res;
   }
 
-  Process::Status Process::getStatus() {
+  Process::Status Process::getStatus() const {
     std::shared_lock<std::shared_mutex> lock(mutex);
     return status;
   }
 
-  Process::Status Process::waitNextEvent() {
-    int s;
-    int res = waitpid(pid, &s, 0);
-
-    // Lock the mutex before accessing the status
+  void Process::updateStatus(Status s) {
     std::scoped_lock<std::shared_mutex> lock(mutex);
-    // The status hasn't changed
-    if (res == 0) return status;
-    // Failed to find the process
-    if (res == -1) {
-      if (errno == ESRCH) {
-        return status = Status::kDead;
-      } else
-        return status = Status::kUnknown;
-    }
-    if (WIFEXITED(s)) { return status = Status::kExited; }
-    // Handle signals that can be caught
-    if (WIFSTOPPED(s)) {
-      // ptrace stops when receiving any signal fatal or not.
-      // Instead of checking for fatal signals, we check for the stop signal and consider other
-      // signals as fatal
-      last_signal = static_cast<Signal>(WSTOPSIG(s));
-      if (WSTOPSIG(s) == SIGSTOP) { return status = Status::kStopped; }
-      return status = Status::kKilled;
-    }
-    // Handle signals that can't be caught
-    if (WIFSIGNALED(s)) { return status = Status::kKilled; }
-    return Status::kRunning;
+    status = s;
   }
 
+  bool Process::isProbeable() const {
+    return isProbeableStatus(status);
+  }
 
   bool Process::resume() {
     std::scoped_lock<std::shared_mutex> lock(mutex);

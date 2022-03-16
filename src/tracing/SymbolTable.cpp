@@ -13,6 +13,7 @@ namespace ldb {
     for (SymbolTable* curr = this; curr != nullptr; curr = curr->next.get()) {
       for (auto& sym : curr->symbols) sym.relocate(addr);
     }
+    base_address = addr;
   }
 
   Symbol* SymbolTable::operator[](const std::string& name) {
@@ -51,51 +52,21 @@ namespace ldb {
     return nullptr;
   }
 
-  Symbol* SymbolTable::findClosestFunction(Elf64_Addr addr) {
-    Symbol* closest = nullptr;
-
-    SymbolTable* table = nullptr;
-
-    for (table = this; table; table = table->next.get()) {
-      for (auto& sym : table->symbols) {
-        if (sym.getAddress() < addr and
-            (closest == nullptr || sym.getAddress() < closest->getAddress()))
-          closest = &sym;
+  std::pair<const Symbol*, const SymbolTable*> SymbolTable::findInTable(Elf64_Addr addr) const {
+    for (const SymbolTable* curr = this; curr != nullptr; curr = curr->next.get()) {
+      for (const auto& sym : curr->symbols) {
+        if (sym.getAddress() == addr) { return {&sym, curr}; }
       }
     }
-
-    // Unresolved symbols
-    if (not closest or closest->getAddress() == 0) { return nullptr; }
-
-    return closest;
+    return {nullptr, nullptr};
   }
-
-  const Symbol* SymbolTable::findClosestFunction(Elf64_Addr addr) const {
-    const Symbol* closest = nullptr;
-
-    const SymbolTable* table = nullptr;
-
-    for (table = this; table; table = table->next.get()) {
-      for (auto& sym : table->symbols) {
-        if (sym.getAddress() < addr and
-            (closest == nullptr || sym.getAddress() < closest->getAddress()))
-          closest = &sym;
-      }
-    }
-
-    // Unresolved symbols
-    if (not closest or closest->getAddress() == 0) { return nullptr; }
-
-    return closest;
-  }
-
 
   void SymbolTable::join(std::unique_ptr<SymbolTable>&& other) {
     if (not other) { return; }
 
     // Append the new table at the end of the list
     SymbolTable* curr = nullptr;
-    for (curr = this; this->next; curr = curr->next.get())
+    for (curr = this; curr->next; curr = curr->next.get())
       ;
     curr->next = std::move(other);
   }

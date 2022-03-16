@@ -45,9 +45,7 @@ namespace ldb {
     if (not isProbeableStatus(process.getStatus())) { return; }
     user_regs_struct regs{};
 
-    if (ptrace(PTRACE_GETREGS, process.getPid(), nullptr, &regs) == -1)
-      throw std::runtime_error("Failed to get registers of process " +
-                               std::to_string(process.getPid()));
+    if (ptrace(PTRACE_GETREGS, process.getPid(), nullptr, &regs) == -1) return;
 
     registers = buildRegisterValues(regs);
   }

@@ -1,14 +1,15 @@
 #pragma once
-
 #include <memory>
 #include <shared_mutex>
+#include <sys/wait.h>
+#include <unistd.h>
 #include <vector>
 
 namespace ldb {
 
   enum class Signal {
-    kUnknown,
-    kSIGHUP,
+    kUnknown = 0,
+    kSIGHUP = 1,
     kSIGINT,
     kSIGQUIT,
     kSIGILL,
@@ -38,7 +39,8 @@ namespace ldb {
     kSIGWINCH,
     kSIGIO,
     kSIGPWR,
-    kSIGSYS
+    kSIGSYS,
+    kSignalCount
   };
 
   std::string signalToString(Signal signal);
@@ -50,32 +52,7 @@ namespace ldb {
   class Process {
   public:
     enum class Status { kUnknown, kRunning, kExited, kKilled, kDead, kStopped };
-
-    /**
-     * @brief Construct a new Process handle associated with the given pid. Does not start the
-     * process.
-     * @param pid the pid to link to
-     */
-    explicit Process(pid_t pid);
-
-    /**
-     * @brief Kills the process if it is alive.
-     */
-    ~Process();
-
-    /**
-     * @brief Process Handle should not be copyable to avoid concurrent access
-     */
-    Process(const Process&) = delete;
-    Process& operator=(const Process&) = delete;
-
-    /**
-     * @brief Thread safe move copy. Beware that this does not guarantee that other threads won't be
-     * able to acces the process after it has been moved. It is up to the user to ensure that no
-     * other thread is accessing the process after it has been moved.
-     */
-    Process(Process&&) noexcept ;
-    Process& operator=(Process&&) noexcept ;
+    enum class ClosePolicy { kKill, kDetach, kWait };
 
     /**
      * @brief Launch the command with its argument in a new process and return a Process handle to
@@ -89,27 +66,58 @@ namespace ldb {
      */
     static std::unique_ptr<Process> fromCommand(const std::string& command,
                                                 const std::vector<std::string>& args,
-                                                bool pipe_output = false);
+                                                bool pipe_output = false,
+                                                ClosePolicy close_policy = ClosePolicy::kKill);
+
+    /**
+     * @brief Construct a new Process handle associated with the given pid. Does not start the
+     * process.
+     * @param pid the pid to link to
+     */
+    Process(pid_t pid, ClosePolicy close_policy = ClosePolicy::kKill);
+
+    /**
+     * @brief Apply the close policy to the process
+     */
+    ~Process();
+
+    void updateStatus(Status s);
+
+    /**
+     * @brief Process Handle should not be copyable to avoid concurrent access
+     */
+    Process(const Process&) = delete;
+    Process& operator=(const Process&) = delete;
+
+    /**
+     * @brief Thread safe move copy. Beware that this does not guarantee that other threads won't be
+     * able to acces the process after it has been moved. It is up to the user to ensure that no
+     * other thread is accessing the process after it has been moved.
+     */
+    Process(Process&&) noexcept;
+    Process& operator=(Process&&) noexcept;
 
     /**
      * @brief Fork a new process and return a Process handle to it.
      * @param create_pty If true, creates a pseudo terminal for the subprocess output and input.
      * @return A new process handle.
      */
-    static std::unique_ptr<Process> fork(bool create_pty = false);
+    static std::unique_ptr<Process> fork(bool create_pty = false,
+                                         ClosePolicy close_policy = ClosePolicy::kKill);
 
     /**
      * @brief Returns the current status of the process
      * This function does not block and does not update the status, only the last known status.
      * @return
      */
-    Status getStatus();
+    Status getStatus() const;
 
     /**
-     * @brief Wait for an even to happen and update the process status
-     * @return The new status
+     * @brief Returns true if the process is in a status that is available for probing via ptrace
+     *
+     * To be able to be traced, a process must neither be dead nor running, in a "stopped" state
      */
-    Status waitNextEvent();
+    bool isProbeable() const;
 
     /**
      * @brief Signal the process to resume execution.
@@ -156,7 +164,7 @@ namespace ldb {
      * @return
      */
     int getMasterFd() const {
-      return master_fd;
+      return master_ptty;
     }
 
     /**
@@ -164,33 +172,28 @@ namespace ldb {
      * @return
      */
     int getSlaveFd() const {
-      return slave_fd;
-    }
-
-    /**
-     * @brief Returns the last signal that was raised by the process
-     * @return The last signal that was raised by the process, or kUnknown if not signal was raised
-     */
-    Signal getLastSignal() const {
-      return last_signal;
+      return slave_ptty;
     }
 
   private:
     /**
      * @brief The subprocess will use those pipes for redirecting its output
      */
-    int slave_fd;
+    int slave_ptty;
 
     /**
      * @brief The subprocess will read its input from this pipe
      */
-    int master_fd;
+    int master_ptty;
 
     pid_t pid = 0;
     Status status = Status::kUnknown;
-    Signal last_signal = Signal::kUnknown;
     bool is_attached = false;
-    std::shared_mutex mutex;
+
+    Process::ClosePolicy close_policy;
+
+    // The mutex should be mutable because it needs to be locked even in const methods
+    mutable std::shared_mutex mutex;
   };
 
   /**

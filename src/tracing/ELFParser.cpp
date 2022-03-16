@@ -1,15 +1,16 @@
 #include "ELFParser.h"
-#include "DwarfReader.h"
 #include <algorithm>
 #include <boost/asio.hpp>
 #include <boost/core/demangle.hpp>
 #include <execution>
 #include <future>
 #include <libdwarf/libdwarf.h>
+#include <libelf.h>
 #include <link.h>
 #include <sys/ptrace.h>
 #include <sys/wait.h>
 #include <utility>
+#include "DwarfReader.h"
 
 // Parsing elf / dwarf data proved to be a bit of a pain since there's no official tutorial or such
 // except for the Standard specifications.
@@ -393,38 +394,6 @@ namespace ldb {
     if (not process.isAttached() and not process.attach()) return nullptr;
     elf_file->parseDynamicSymbols(process);
     return elf_file->yieldDebugInfo();
-  }
-
-
-  std::optional<std::pair<std::string, size_t>> addr2Line(const std::filesystem::path& path,
-                                                          const Elf64_Addr addr) {
-    std::array<char, 128> buffer;
-    std::stringstream ss;
-
-    ss << "addr2line -e " << path << " " << std::hex << addr;
-
-    const std::string str_cmd = std::move(ss.str());
-    const char* cmd = str_cmd.c_str();
-
-    FILE* fp = popen(cmd, "r");
-    if (not fp) throw std::runtime_error("popen failed");
-
-    std::string output;
-    while (fgets(buffer.data(), buffer.size(), fp) != nullptr) { output += buffer.data(); }
-
-    const int status = pclose(fp);
-    if (WEXITSTATUS(status) != 0) return std::nullopt;
-
-    std::pair<std::string, size_t> res;
-
-    const size_t separator = output.find(":");
-    std::string str_pos = output.substr(separator + 1);
-
-    res.first = output.substr(0, separator);
-    if (res.first == "??" or str_pos == "??") return std::nullopt;
-    res.second = strtoul(str_pos.c_str(), nullptr, 10);
-
-    return res;
   }
 
 }// namespace ldb

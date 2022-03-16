@@ -25,17 +25,17 @@ namespace ldb::gui {
     auto* label_command = new QLabel("Command: ");
     input_layout->addWidget(label_command, 0, 0);
     command = new QLineEdit();
-    input_layout->addWidget(command, 0, 1, 1, 1);
+    input_layout->addWidget(command, 1, 0, 1, 1);
     // Add a button for folder opening
     auto* open_folder = new QPushButton(QIcon(":/icons/folder-open-fill.png"), "");
     connect(open_folder, &QPushButton::clicked, this, &CommandDialog::openFileDialog);
-    input_layout->addWidget(open_folder, 0, 3, 1, 1, Qt::AlignRight);
+    input_layout->addWidget(open_folder, 1, 2, 1, 1, Qt::AlignRight);
 
     // Setup a line edit for command arguments
     auto* label_args = new QLabel("Arguments: ");
-    input_layout->addWidget(label_args, 1, 0);
+    input_layout->addWidget(label_args, 2, 0);
     args = new QTextEdit();
-    input_layout->addWidget(args, 1, 1, 1, 1);
+    input_layout->addWidget(args, 3, 0, 1, 3);
 
     // Line separator between input and confirmation buttons
     QFrame* line_separator = new QFrame();

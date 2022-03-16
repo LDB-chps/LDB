@@ -19,13 +19,13 @@ namespace ldb::gui {
     setSelectionBehavior(QAbstractItemView::SelectRows);
     setAlternatingRowColors(true);
     setSelectionBehavior(QAbstractItemView::SelectRows);
-    setSelectionMode(QAbstractItemView::SingleSelection);
+    setSelectionMode(QAbstractItemView::NoSelection);
     setWordWrap(true);
     setContextMenuPolicy(Qt::CustomContextMenu);
 
     connect(parent, &TracerPanel::executionStarted, this, &LibraryView::onExecutionStarted);
-    connect(parent, &TracerPanel::tracerUpdated, this, &LibraryView::onExecutionStarted);
-    connect(parent, &TracerPanel::executionEnded, this, &LibraryView::clear);
+    connect(parent, &TracerPanel::signalReceived, this, &LibraryView::onExecutionStarted);
+    connect(parent, &TracerPanel::executionEnded, this, &LibraryView::clearContents);
   }
 
   void LibraryView::onExecutionStarted() {

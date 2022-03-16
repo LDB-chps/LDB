@@ -1,6 +1,7 @@
 #pragma once
 #include "Symbol.h"
 #include <iostream>
+#include <utility>
 #include <vector>
 
 
@@ -16,7 +17,8 @@ namespace ldb {
     friend std::ostream& operator<<(std::ostream& os, const SymbolTable& table);
 
     SymbolTable() = default;
-    explicit SymbolTable(size_t size) {
+    explicit SymbolTable(size_t size, std::filesystem::path object_file)
+        : object_file(std::move(object_file)), base_address(0) {
       symbols.reserve(size);
     }
 
@@ -45,12 +47,17 @@ namespace ldb {
     Symbol* operator[](Elf64_Addr name);
     const Symbol* operator[](Elf64_Addr name) const;
 
-    Symbol* findClosestFunction(Elf64_Addr addr);
-    const Symbol* findClosestFunction(Elf64_Addr addr) const;
+    std::pair<const Symbol*, const SymbolTable*> findInTable(Elf64_Addr addr) const;
+
+    std::filesystem::path getObjectFile() const {
+      return object_file;
+    }
+
+    Elf64_Addr getBaseAddress() const {
+      return base_address;
+    }
 
     void join(std::unique_ptr<SymbolTable>&& other);
-
-
 
     using iterator = std::vector<Symbol>::iterator;
     using const_iterator = std::vector<Symbol>::const_iterator;
@@ -74,6 +81,7 @@ namespace ldb {
     std::unique_ptr<SymbolTable> next;
     std::string file;
     std::filesystem::path object_file;
+    Elf64_Addr base_address;
   };
 
 

@@ -11,6 +11,7 @@
 #include <QToolButton>
 #include <QVBoxLayout>
 #include <boost/algorithm/string.hpp>
+#include <sys/ptrace.h>
 #include <tscl.hpp>
 
 namespace ldb::gui {
@@ -45,7 +46,7 @@ namespace ldb::gui {
     top_widget->setLayout(top_panel_layout);
     horizontal_splitter->addWidget(top_widget);
 
-    code_view = new CodeView(this);
+    code_view = new ObjdumpView(this);
     top_panel_layout->addWidget(code_view);
 
     // Setup the bottom panel
@@ -80,6 +81,11 @@ namespace ldb::gui {
     message_tabs->addTab(pty_handler, "Input/Output");
     message_tabs->setTabIcon(1, QIcon(":/icons/terminal-box-fill.png"));
     connect(this, &TracerPanel::executionStarted, [=]() { message_tabs->setCurrentIndex(1); });
+    connect(this, &TracerPanel::executionStarted, [&]() {
+      if (not process_tracer) return;
+      pty_handler->reassignTo(process_tracer->getProcess().getMasterFd());
+    });
+    connect(this, &TracerPanel::executionEnded, [&]() { pty_handler->reassignTo(-1); });
 
     auto* information_tab = new QTabWidget(vertical_splitter);
     information_tab->setIconSize(QSize(16, 16));
@@ -105,49 +111,32 @@ namespace ldb::gui {
     endTracer(true);
   }
 
-  void TracerPanel::setupThreads() {
-    endThreads();
-    if (not process_tracer) return;
-
-    pty_handler->reassignTo(process_tracer->getMasterFd());
-    update_thread = QThread::create(&TracerPanel::updateLoop, this);
-    update_thread->start();
-  }
-
-  void TracerPanel::endThreads() {
-    if (update_thread and update_thread->isRunning()) {
-      update_thread->terminate();
-      update_thread = nullptr;
-    }
-    pty_handler->reassignTo(-1);
-  }
-
   void TracerPanel::toggleExecution() {
     if (not process_tracer) return;
 
     auto& p = process_tracer->getProcess();
     auto status = p.getStatus();
+
     if (status == Process::Status::kStopped) {
-      p.resume();
-      emit tracerUpdated();
+      process_tracer->resume();
+      emit signalReceived(SignalEvent(Signal::kSIGCONT, p.getStatus(), true, false));
     } else {
-      p.pause();
+      process_tracer->pause();
     }
   }
 
-  void TracerPanel::stopExecution() {
+  void TracerPanel::abortExecution() {
 
-    if (not process_tracer or process_tracer->getProcessStatus() == Process::Status::kDead) return;
+    if (not process_tracer or process_tracer->getProcess().getStatus() == Process::Status::kDead)
+      return;
 
     auto res = QMessageBox::question(this, "End execution",
                                      "An execution is running.\nAre you sure you want to stop it ?",
                                      QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
     if (res == QMessageBox::No) return;
 
-    endThreads();
-    auto& p = process_tracer->getProcess();
-    p.kill();
     emit executionEnded();
+    process_tracer->abort();
   }
 
   void TracerPanel::displayCommandDialog() {
@@ -163,19 +152,19 @@ namespace ldb::gui {
     if (not force) {
       auto res = QMessageBox::question(
               this, "Restart execution",
-              "An execution is already started.\nAre you sure you want to restart it ?",
+              "An execution is already started.\nAre you sure you want to reset it ?",
               QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
       if (res == QMessageBox::No) return;
     }
 
-    endThreads();
-    bool res = process_tracer->restart();
+    emit executionEnded();
 
-    if (not res) tscl::logger("Failed to restart the process.", tscl::Log::Error);
+    bool res = process_tracer->restart();
+    // Setup a new signal handler
+    if (not res) tscl::logger("Failed to reset the process.", tscl::Log::Error);
     else
       tscl::logger("Process restarted.", tscl::Log::Information);
 
-    setupThreads();
     emit executionStarted();
   }
 
@@ -210,11 +199,12 @@ namespace ldb::gui {
         return false;
       }
 
-      setupThreads();
+      // Setup a new signal handler
+      auto* sighandler = process_tracer->makeSignalHandler<QtSignalHandler>();
+      connect(sighandler, &QtSignalHandler::signalReceived, this, &TracerPanel::signalReceived);
 
       // Emit signals to update the UI accordingly
       emit executionStarted();
-      emit tracerUpdated();
     } catch (const std::exception& e) {
       tscl::logger("Failed to start command: " + command + ":", tscl::Log::Error);
       tscl::logger(e.what(), tscl::Log::Error);
@@ -234,24 +224,9 @@ namespace ldb::gui {
       if (res == QMessageBox::No) return;
     }
 
-    endThreads();
-
     // No need to manually kill the process tracer, it will end itself
     process_tracer = nullptr;
 
     emit executionEnded();
-  }
-
-  void TracerPanel::updateLoop() {
-    bool done = false;
-    while (not done) {
-      if (not process_tracer) { done = true; }
-      auto status = process_tracer->waitNextEvent();
-      if (status == Process::Status::kDead or status == Process::Status::kKilled or
-          status == Process::Status::kUnknown) {
-        done = true;
-      }
-      emit tracerUpdated();
-    }
   }
 }// namespace ldb::gui
