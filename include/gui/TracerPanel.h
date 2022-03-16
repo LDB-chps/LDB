@@ -96,12 +96,6 @@ namespace ldb::gui {
     void setupThreads();
     void endThreads();
 
-    /**
-     * @brief Loop function on which a new thread is created to periodically update the tracee
-     * status
-     */
-    void updateLoop();
-
     void setupToolbar(QGridLayout* layout);
 
     void setupCodeView(QGridLayout* layout);

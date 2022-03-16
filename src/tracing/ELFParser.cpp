@@ -3,13 +3,10 @@
 #include <algorithm>
 #include <boost/asio.hpp>
 #include <boost/core/demangle.hpp>
-#include <execution>
 #include <future>
-#include <libdwarf/libdwarf.h>
 #include <libelf.h>
 #include <link.h>
 #include <sys/ptrace.h>
-#include <sys/wait.h>
 #include <utility>
 
 // Parsing elf / dwarf data proved to be a bit of a pain since there's no official tutorial or such

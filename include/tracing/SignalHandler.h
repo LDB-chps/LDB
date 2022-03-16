@@ -34,7 +34,9 @@ namespace ldb::gui {
 
   class SignalHandler {
   public:
+    SignalHandler();
     SignalHandler(Process* process);
+
     virtual ~SignalHandler();
 
     void setProcess(Process* process);

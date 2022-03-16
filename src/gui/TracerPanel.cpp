@@ -2,6 +2,7 @@
 #include "CommandDialog.h"
 #include "LibraryView.h"
 #include "PtyHandler.h"
+#include "QtSignalHandler.h"
 #include "logWidget.h"
 #include <QHBoxLayout>
 #include <QMessageBox>
@@ -212,6 +213,8 @@ namespace ldb::gui {
       }
 
       setupThreads();
+      auto sighandler = std::make_unique<QtSignalHandler>();
+      process_tracer->setSignalHandler(std::move(sighandler));
 
       // Emit signals to update the UI accordingly
       emit executionStarted();
@@ -241,21 +244,5 @@ namespace ldb::gui {
     process_tracer = nullptr;
 
     emit executionEnded();
-  }
-
-  void TracerPanel::updateLoop() {
-    bool done = false;
-    if (not process_tracer) return;
-
-    while (not done) {
-      if (not process_tracer) { done = true; }
-      auto status = process_tracer->waitNextEvent();
-
-      if (status == Process::Status::kDead or status == Process::Status::kKilled or
-          status == Process::Status::kUnknown) {
-        done = true;
-      }
-      emit tracerUpdated();
-    }
   }
 }// namespace ldb::gui
