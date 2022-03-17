@@ -1,10 +1,8 @@
 #include "MainWindow.h"
-#include <QApplication>
 #include <QFile>
 #include <QGridLayout>
 #include <QMenuBar>
 #include <QMessageBox>
-#include <QProgressBar>
 #include <QWidget>
 
 namespace ldb::gui {

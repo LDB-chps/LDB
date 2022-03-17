@@ -1,9 +1,9 @@
 #pragma once
 #include "Symbol.h"
+#include <filesystem>
 #include <iostream>
 #include <utility>
 #include <vector>
-
 
 namespace ldb {
 
@@ -29,6 +29,25 @@ namespace ldb {
     void shrinkToFit();
 
     void relocate(Elf64_Addr);
+
+
+    const Symbol* at(size_t index) const {
+      size_t count = 0;
+      for (const SymbolTable* table = this; table != nullptr; table = table->next.get()) {
+        if (index < table->symbols.size()) { return &table->symbols[index]; }
+        count += table->symbols.size();
+        index -= table->symbols.size();
+      }
+      return nullptr;
+    }
+
+    size_t getSize() const {
+      size_t count = 0;
+      for (const SymbolTable* table = this; table != nullptr; table = table->next.get()) {
+        count += table->symbols.size();
+      }
+      return count;
+    }
 
     Symbol& push_back(const Symbol& symbol) {
       symbols.push_back(symbol);

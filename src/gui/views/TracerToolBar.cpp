@@ -40,6 +40,11 @@ namespace ldb::gui {
     label_last_signal = new QLabel("");
     addWidget(label_last_signal);
 
+    auto* display_breakpoints =
+            new QAction(QIcon(":/icons/view-module.png"), "Display breakpoints");
+    addAction(display_breakpoints);
+    connect(display_breakpoints, &QAction::triggered, parent, &TracerPanel::displayBreakpoints);
+
     connect(parent, &TracerPanel::signalReceived, this, &TracerToolBar::updateView);
     connect(parent, &TracerPanel::executionEnded, this, &TracerToolBar::updateButtons);
     connect(parent, &TracerPanel::executionStarted, this, &TracerToolBar::startView);

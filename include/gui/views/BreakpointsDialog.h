@@ -1,28 +1,50 @@
 #pragma once
+#include "SymbolTable.h"
 #include "TracerView.h"
 #include <QDialog>
 #include <QLineEdit>
 #include <QSortFilterProxyModel>
-#include <QStandardItemModel>
 #include <QTableView>
 
 namespace ldb::gui {
 
+  class BreakpointModel : public QAbstractTableModel {
+  public:
+    BreakpointModel(QObject* parent, TracerPanel* tp);
+    int rowCount(const QModelIndex& parent) const override;
+    int columnCount(const QModelIndex& parent) const override;
+    QVariant data(const QModelIndex& index, int role) const override;
+    QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
+
+    const Symbol* getSymbol(int row) const;
+
+  public slots:
+    void update();
+
+  private:
+    TracerPanel* tracer_panel;
+  };
+
   class BreakpointsDialog : public QDialog, public TracerView {
   public:
-    BreakpointsDialog(TracerPanel* parent);
+    explicit BreakpointsDialog(TracerPanel* parent);
 
   public slots:
 
     void makeModel();
     void clearModel();
 
+    virtual QSize sizeHint() const override {
+      return QSize(800, 600);
+    }
+
   private:
     QLineEdit* search_bar;
-    QCompleter* completer;
-    QStandardItemModel* model;
+    BreakpointModel* model;
     QSortFilterProxyModel* search_proxy;
-    QTableView* bp_list_view;
+    QSortFilterProxyModel* breakpoint_proxy;
+    QTableView* function_list;
+    QTableView* breakpoint_list;
   };
 
 }// namespace ldb::gui

@@ -1,6 +1,7 @@
 #pragma once
 #include "Process.h"
 #include <condition_variable>
+#include <optional>
 #include <thread>
 
 namespace ldb {
@@ -62,12 +63,32 @@ namespace ldb {
       is_muted = false;
     }
 
-    SignalEvent nextSignal();
-    virtual SignalEvent handleEvent(const SignalEvent& event);
+    SignalEvent waitEvent();
+    std::optional<SignalEvent> waitEvent(size_t usec);
 
     void setIgnored(Signal signal, bool ignored);
 
   protected:
+    virtual SignalEvent handleEvent(const SignalEvent& event);
+    SignalEvent makeEventFromSignal(int signal);
+
+    /**
+     * @brief Wait for a signal to be received. Throws an exception on error (i.e the process was
+     * killed)
+     *
+     * @param timeout The timeout in useconds
+     * If set to 0, the function will wait indefinitely, and is guaranteed to return a valid
+     * event, or throw if it can't.
+     *
+     * Else, if timeout is set to a valid value, the function will return a valid event if it
+     * received one in the given time. Otherwise, it will return std::nullopt. If an errors occurs,
+     * the function will throw.
+     *
+     * @return A valid event if one was received, or std::nullopt if the timeout was reached.
+     * Guaranteed to return a valid event if timeout is nullptr and no error occurs.
+     */
+    std::optional<SignalEvent> pollEvent(size_t utimeout);
+
     std::atomic<bool> is_muted;
     std::vector<bool> ignored_signals;
     Process* process;

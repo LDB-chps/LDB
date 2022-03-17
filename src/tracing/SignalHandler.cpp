@@ -1,4 +1,5 @@
 #include "SignalHandler.h"
+#include <cerrno>
 #include <sys/ptrace.h>
 #include <tscl.hpp>
 
@@ -8,7 +9,7 @@ namespace ldb {
 
   const SignalEvent SignalEvent::None{Signal::kSignalCount, Process::Status::kUnknown, true, false};
 
-  SignalHandler::SignalHandler(Process* process) : process(process) {
+  SignalHandler::SignalHandler(Process* process) : process(process), is_muted(false) {
     ignored_signals.resize(static_cast<size_t>(Signal::kSignalCount));
     ignored_signals.assign(ignored_signals.size(), false);
     setIgnored(Signal::kSIGCHLD, true);
@@ -22,49 +23,73 @@ namespace ldb {
     ignored_signals[static_cast<size_t>(signal)] = ignored;
   }
 
-  SignalEvent SignalHandler::nextSignal() {
-    int s;
-    int res = waitpid(process->getPid(), &s, WCONTINUED);
+  SignalEvent SignalHandler::waitEvent() {
+    if (is_muted) return SignalEvent::None;
+    std::optional<SignalEvent> e = pollEvent(0);
+    return handleEvent(*e);
+  }
 
-    if (res == 0) return SignalEvent::None;
+  std::optional<SignalEvent> SignalHandler::waitEvent(size_t usec) {
+    if (is_muted) return SignalEvent::None;
+    std::optional<SignalEvent> e = pollEvent(usec);
+
+    if (not e) return std::nullopt;
+
+    return handleEvent(*e);
+  }
+
+  std::optional<SignalEvent> SignalHandler::pollEvent(size_t usec) {
+    size_t slept = 0;
+    size_t delta = std::min(10000UL, usec);
+    int res = 0;
+    int status = 0;
+
+    if (usec == 0) res = waitpid(process->getPid(), &status, 0);
+    else
+      do {
+        res = waitpid(process->getPid(), &status, WNOHANG);
+        usleep(delta);
+        slept += delta;
+      } while (slept <= usec and res == 0);
+
+
+    if (res == 0) {
+      if (usec == 0) throw std::runtime_error("waitpid() failed");
+      return std::nullopt;
+    } else if (res < 0) {
+      return SignalEvent{Signal::kSIGQUIT, Process::Status::kDead, true, false};
+    }
+
+    int signal = 0;
+    if (WIFSTOPPED(status)) {
+      signal = WSTOPSIG(status);
+    } else if (WIFSIGNALED(status)) {
+      signal = WTERMSIG(status);
+    } else if (WIFEXITED(status)) {
+      signal = SIGQUIT;
+    }
+    return makeEventFromSignal(signal);
+  }
+
+  SignalEvent SignalHandler::makeEventFromSignal(int signal) {
 
     Process::Status new_status = Process::Status::kUnknown;
-    Signal signal = Signal::kUnknown;
 
     // Failed to find the process
-    if (res == -1) {
-      new_status = Process::Status::kDead;
-      signal = Signal::kSIGABRT;
-    } else if (WIFCONTINUED(s)) {
-      signal = Signal::kSIGCONT;
-      new_status = Process::Status::kRunning;
-    } else if (WIFEXITED(s)) {
+    if (signal == SIGCONT) new_status = Process::Status::kRunning;
+    else if (signal == SIGQUIT)
       new_status = Process::Status::kExited;
-      signal = Signal::kSIGQUIT;
-    }
     // Handle catchable signals
-    else if (WIFSTOPPED(s)) {
-      // The following signals are considered to be stopping by default
-      // (Handling ignored signals is done at a higher level)
-      if (WSTOPSIG(s) == SIGTRAP or WSTOPSIG(s) == SIGSTOP or WSTOPSIG(s) == SIGTSTP or
-          WSTOPSIG(s) == SIGTTIN or WSTOPSIG(s) == SIGTTOU or WSTOPSIG(s) == SIGCHLD or
-          WSTOPSIG(s) == SIGALRM or WSTOPSIG(s) == SIGCONT or WSTOPSIG(s) == SIGURG or
-          WSTOPSIG(s) == SIGWINCH)
-        new_status = Process::Status::kStopped;
-      // The remaining signals are considered as fatal
-      // A better options would be to fetch the handled signals from the process
-      // and check them this way
-      else
-        new_status = Process::Status::kKilled;
-      signal = static_cast<Signal>(WSTOPSIG(s));
-    }
-    // Handle signals that can't be caught
-    else if (WIFSIGNALED(s)) {
+    else if (signal == SIGTRAP or signal == SIGSTOP or signal == SIGTSTP or signal == SIGTTIN or
+             signal == SIGTTOU or signal == SIGCHLD or signal == SIGALRM or signal == SIGURG or
+             signal == SIGWINCH)
+      new_status = Process::Status::kStopped;
+    else
       new_status = Process::Status::kKilled;
-      signal = static_cast<Signal>(WTERMSIG(s));
-    }
     process->updateStatus(new_status);
-    return handleEvent({signal, new_status, false, false});
+    return {static_cast<Signal>(signal), new_status, false,
+            new_status == Process::Status::kKilled or new_status == Process::Status::kExited or
+                    new_status == Process::Status::kDead};
   }
 
   SignalEvent SignalHandler::handleEvent(const SignalEvent& event) {

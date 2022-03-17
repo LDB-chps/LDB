@@ -12,15 +12,46 @@ namespace ldb::gui {
     worker_thread->start();
   }
 
+  QtSignalHandler::~QtSignalHandler() {
+    stopThread();
+  }
+
+  void QtSignalHandler::stopThread() {
+    if (not worker_thread or not worker_thread->isRunning()) return;
+
+    worker_exit = true;
+    update_cv.notify_all();
+    worker_thread->wait();
+    worker_exit = false;
+  }
+
   void QtSignalHandler::reset(Process* p) {
-    if (worker_thread and worker_thread->isRunning()) { worker_thread->exit(0); }
+    stopThread();
+    is_muted = false;
     process = p;
     worker_thread = QThread::create(&QtSignalHandler::workerLoop, this);
     worker_thread->start();
   }
 
-  QtSignalHandler::~QtSignalHandler() {
-    if (worker_thread and worker_thread->isRunning()) { worker_thread->terminate(); }
+  void QtSignalHandler::mute() {
+
+    std::cout << "Muting" << std::endl;
+    if (is_muted or not worker_thread or not worker_thread->isRunning()) return;
+
+    is_muted = true;
+
+    std::unique_lock<std::mutex> l(mutex);
+
+    // Wait until the thread signals that it has finished
+    update_cv.wait(l, [this]() -> bool { return worker_waiting; });
+    std::cout << "Done muting" << std::endl;
+  }
+
+  void QtSignalHandler::unmute() {
+    if (not is_muted or not worker_thread or not worker_thread->isRunning()) return;
+    update_cv.notify_one();
+
+    is_muted = false;
   }
 
   SignalEvent QtSignalHandler::handleEvent(const SignalEvent& event) {
@@ -40,13 +71,25 @@ namespace ldb::gui {
   }
 
   void QtSignalHandler::workerLoop() {
-    while (true) {
-      SignalEvent event = nextSignal();
-      handleEvent(event);
-      if (event.getStatus() == Process::Status::kDead or
-          event.getStatus() == Process::Status::kExited or
-          event.getStatus() == Process::Status::kKilled) {
-        break;
+    while (not worker_exit) {
+      // Wait for 100ms
+      std::optional<SignalEvent> event = waitEvent(10000000);
+      if (event) {
+        handleEvent(*event);
+        if (event->getStatus() == Process::Status::kDead or
+            event->getStatus() == Process::Status::kExited or
+            event->getStatus() == Process::Status::kKilled) {
+          break;
+        }
+      }
+      if (is_muted) {
+        std::unique_lock<std::mutex> l(mutex);
+        std::cout << "Muted !" << std::endl;
+        worker_waiting = true;
+        update_cv.notify_one();
+        update_cv.wait(l);
+        std::cout << "Unmuted !" << std::endl;
+        worker_waiting = false;
       }
     }
   }

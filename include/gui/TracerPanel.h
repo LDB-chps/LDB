@@ -1,5 +1,9 @@
 #pragma once
-
+#include <QApplication>
+#include <QGridLayout>
+#include <QThread>
+#include <QWidget>
+#include "BreakpointsDialog.h"
 #include "ObjdumpView.h"
 #include "ProcessTracer.h"
 #include "PtyHandler.h"
@@ -8,9 +12,6 @@
 #include "StackTraceView.h"
 #include "TracerToolBar.h"
 #include "VariableView.h"
-#include <QGridLayout>
-#include <QThread>
-#include <QWidget>
 
 namespace ldb::gui {
 
@@ -60,6 +61,10 @@ namespace ldb::gui {
      * @brief Creates a dialog to select a process to start tracing.
      */
     void displayCommandDialog();
+
+    void displayBreakpoints() {
+      breakpoints_dialog->show();
+    }
 
     bool startExecution(const std::string& command, const std::string& args, bool force = false);
 
@@ -112,5 +117,6 @@ namespace ldb::gui {
     ObjdumpView* objdump_view = nullptr;
     SourceCodeView* code_view = nullptr;
     PtyHandler* pty_handler = nullptr;
+    BreakpointsDialog* breakpoints_dialog = nullptr;
   };
 }// namespace ldb::gui

@@ -16,16 +16,8 @@ namespace ldb::gui {
 
     void reset(Process* p) override;
 
-    void mute() override {
-      is_muted = true;
-      update_cv.notify_one();
-      std::condition_variable cv;
-      cv.wait(worker_waiting);
-    }
-
-    virtual void unmute() {
-      is_muted = false;
-    }
+    void mute() override;
+    void unmute() override;
 
   signals:
 
@@ -38,7 +30,12 @@ namespace ldb::gui {
     void resumeTracee(SignalEvent event);
 
   private:
+    void stopThread();
+
+    std::mutex mutex;
     std::atomic<bool> worker_waiting;
+    std::atomic<bool> worker_exit;
+
     void workerLoop();
     QThread* worker_thread;
     std::condition_variable update_cv;

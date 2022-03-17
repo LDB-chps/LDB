@@ -14,6 +14,7 @@
 #include <sys/ptrace.h>
 #include <tscl.hpp>
 
+
 namespace ldb::gui {
   TracerPanel::TracerPanel(QWidget* parent) : QWidget(parent) {
 
@@ -92,6 +93,8 @@ namespace ldb::gui {
     auto& logger = tscl::logger.addHandler<QtLogHandler>("QtHandler");
     logger.tsType(tscl::timestamp_t::Partial);
 
+    breakpoints_dialog = new BreakpointsDialog(this);
+
     // Widget associated with the logger
     auto message = logger.getWidget();
 
@@ -131,7 +134,8 @@ namespace ldb::gui {
 
   void TracerPanel::abortExecution() {
 
-    if (not process_tracer or process_tracer->getProcess().getStatus() == Process::Status::kDead)
+    if (not process_tracer or process_tracer->getProcess().getStatus() == Process::Status::kDead or
+        process_tracer->getProcess().getStatus() == Process::Status::kKilled)
       return;
 
     auto res = QMessageBox::question(this, "End execution",
@@ -139,8 +143,8 @@ namespace ldb::gui {
                                      QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
     if (res == QMessageBox::No) return;
 
-    emit executionEnded();
     process_tracer->abort();
+    emit executionEnded();
   }
 
   void TracerPanel::displayCommandDialog() {

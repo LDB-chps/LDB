@@ -1,7 +1,7 @@
 #pragma once
-
-#include "TracerPanel.h"
+#include <QApplication>
 #include <QMainWindow>
+#include "TracerPanel.h"
 
 namespace ldb::gui {
 
