@@ -16,6 +16,7 @@ AllowShortLoopsOnASingleLine: true
 AlwaysBreakAfterReturnType: None
 AlwaysBreakTemplateDeclarations: Yes
 BreakBeforeBraces: Custom
+SortIncludes: Never
 BraceWrapping:
   AfterCaseLabel: false
   AfterClass: false
