@@ -1,16 +1,20 @@
 #include "QtSignalHandler.h"
 #include <QThread>
+#include <iostream>
+#include <thread>
 
 namespace ldb::gui {
 
-  QtSignalHandler::QtSignalHandler(Process* process) : SignalHandler(process) {
+  QtSignalHandler::QtSignalHandler(Process* process)
+      : SignalHandler(process), worker_thread(nullptr) {
     connect(this, &QtSignalHandler::ignoredEvent, this, &QtSignalHandler::resumeTracee);
     worker_thread = QThread::create(&QtSignalHandler::workerLoop, this);
     worker_thread->start();
   }
 
-  void QtSignalHandler::reset() {
-    worker_thread->terminate();
+  void QtSignalHandler::reset(Process* p) {
+    if (worker_thread and worker_thread->isRunning()) { worker_thread->exit(0); }
+    process = p;
     worker_thread = QThread::create(&QtSignalHandler::workerLoop, this);
     worker_thread->start();
   }

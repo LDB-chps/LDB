@@ -14,7 +14,7 @@ namespace ldb::gui {
 
     SignalEvent handleEvent(const SignalEvent& event) override;
 
-    void reset() override;
+    void reset(Process* p) override;
 
   signals:
 

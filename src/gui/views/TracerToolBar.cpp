@@ -42,7 +42,7 @@ namespace ldb::gui {
 
     connect(parent, &TracerPanel::signalReceived, this, &TracerToolBar::updateView);
     connect(parent, &TracerPanel::executionEnded, this, &TracerToolBar::updateButtons);
-    connect(parent, &TracerPanel::executionStarted, this, &TracerToolBar::updateButtons);
+    connect(parent, &TracerPanel::executionStarted, this, &TracerToolBar::startView);
   }
 
   void TracerToolBar::startView() {

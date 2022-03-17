@@ -16,14 +16,10 @@
 namespace ldb {
 
   /**
-   * @brief Frontend class that can be used to trace a process and yield useful
-   * information for debugging.
+   * @brief Main class that handles tracing of a process.
    *
-   * This class provides various methods to trace a process and yield useful information for
-   * debugging. Note that this requires that the process is suspended, and the class will return no
-   * data otherwise.
-   *
-   * We recommend calling isSuspended() method before trying to access any of the getter methods.
+   * Provides utility from starting and pausing a process, attaching a signal handler, and getting
+   * information such as a stacktrace and register snapshots.
    */
   class ProcessTracer {
   public:
@@ -53,6 +49,10 @@ namespace ldb {
      */
     const std::string& getExecutable();
 
+    /**
+     * @brief Restart the process using the same arguments used to launch it in the first place
+     * @return True if the process was restarted, false otherwise
+     */
     bool restart();
 
     const Process& getProcess() const {
@@ -92,29 +92,45 @@ namespace ldb {
     }
 
     /**
-     * @brief Returns a vector containing the full stacktrace of the process
-     * @return A vector containing the full stacktrace of the process, or an empty vector if this
-     * data is unavailable
+     * @brief Returns the current stacktrace of the process if it is stopped
+     * @return A unique_ptr to as StackTrace object, or nullptr if the process is not stopped or an
+     * error occurred
      */
     std::unique_ptr<StackTrace> getStackTrace();
 
     /**
      * @brief Yield the current process registers values
-     * @return
+     * @return A unique_ptr to a RegistersSnapshot object, or nullptr if an error occurred or the
+     * process is not stopped
      */
     std::unique_ptr<RegistersSnapshot> getRegistersSnapshot() const;
 
+    /**
+     * @brief Load and parse the debug information of the process, and cache it for future requests
+     * If this operation fails, the debug information is not cached and the next call to this
+     * function will NOT try to load it again
+     *
+     * @return A pointer to the loaded debug information, or nullptr if an error occurred or no
+     * debug symbols are available
+     */
     const DebugInfo* getDebugInfo() {
-      if (not debug_info and isProbeableStatus(process->getStatus())) {
+      if (not debug_info and not failed_read_debug_info and
+          isProbeableStatus(process->getStatus())) {
         debug_info = readDebugInfo(executable_path, *process);
+        failed_read_debug_info = debug_info != nullptr;
       }
       return debug_info.get();
     }
 
+    /**
+     * @brief Adds a signal handler to the process.
+     * @tparam Sighandler The type of the signal handler to add.
+     * @return A pointer to the added signal handler, or nullptr if an error occurred
+     */
     template<class Sighandler>
     Sighandler* makeSignalHandler() {
       auto tmp = std::make_unique<Sighandler>(process.get());
-      // Get the ret ptr before type casting to parent class
+      // Get the res ptr before type casting to parent class
       auto res = tmp.get();
       signal_handler = std::move(tmp);
       return res;
@@ -133,6 +149,13 @@ namespace ldb {
     std::unique_ptr<const DebugInfo> debug_info;
 
     std::unique_ptr<SignalHandler> signal_handler;
+
+    // When the user first tries to access the debug_info, we need to read it.
+    // It cannot be parsed beforehand since we may parse it before the process exits the
+    // execve trap.
+    // This flag only serves to indicate that we tried to read the debug_info, and failed
+    // to prevent future attempts
+    bool failed_read_debug_info = false;
   };
 
 }// namespace ldb

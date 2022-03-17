@@ -10,6 +10,7 @@
 #include <link.h>
 #include <sys/ptrace.h>
 #include <sys/wait.h>
+#include <tscl.hpp>
 #include <utility>
 
 // Parsing elf / dwarf data proved to be a bit of a pain since there's no official tutorial or such
@@ -36,14 +37,12 @@ namespace ldb {
      */
     class ELFFile {
     public:
-      static std::unique_ptr<ELFFile> make(const fs::path& elf_file) {
-        auto res = std::unique_ptr<ELFFile>(new ELFFile(elf_file));
-        if (res->badbit) {
-          std::cerr << "Failed to open " << elf_file << std::endl;
-          return nullptr;
-        }
-        return res;
-      }
+      /**
+       * @brief Builds a new ELFFile object and parses static symbols from the file
+       * This functions does not parse dwarf nor dynamic symbols.
+       * @param elf_path
+       */
+      explicit ELFFile(const fs::path& elf_path);
 
       ~ELFFile();
 
@@ -62,6 +61,10 @@ namespace ldb {
        */
       bool parseDynamicSymbols(Process& process);
 
+      bool hasSymbolTable() const {
+        return debug_info and debug_info->getSymbolTable();
+      }
+
       std::unique_ptr<DebugInfo> yieldDebugInfo() {
         return std::move(debug_info);
       }
@@ -71,13 +74,6 @@ namespace ldb {
       }
 
     private:
-      /**
-       * @brief Builds a new ELFFile object and parses static symbols from the file
-       * This functions does not parse dwarf nor dynamic symbols.
-       * @param elf_path
-       */
-      explicit ELFFile(const fs::path& elf_path);
-
       // Load the entire file into memory
       void loadIntoMemory(const fs::path& elf_path);
 
@@ -118,29 +114,16 @@ namespace ldb {
       // We should not wrap the memory return by libelf using unique_ptr since
       // Malloc and New are not supposed to be compatible and free/delete may throw
       Elf* elf = elf_memory(data.get(), std::filesystem::file_size(elf_path));
-      if (not elf) {
-        badbit = true;
-        return;
-      }
+      if (not elf) throw std::runtime_error("Failed to load file: " + elf_path.string());
+
 
       header = elf64_getehdr(elf);
-      if (not header) {
-        badbit = true;
-        return;
-      }
+      if (not header) throw std::runtime_error("Failed to read elf header");
 
       parseSections();
-      if (sections.empty()) {
-        badbit = true;
-        return;
-      }
 
       // Parse the local symbols of the file (Only functions)
       parseSymbols();
-      if (not debug_info->getSymbolTable()) {
-        badbit = true;
-        return;
-      }
 
       readDwarfDebugInfo(elf, *debug_info.get());
       elf_end(elf);
@@ -151,8 +134,9 @@ namespace ldb {
     }
 
     void ELFFile::loadIntoMemory(const fs::path& elf_path) {
+
       std::ifstream file(elf_path, std::ios::binary);
-      if (!file.is_open()) { throw std::runtime_error("Failed to open file " + elf_path.string()); }
+      file.exceptions(file.exceptions() | std::ios::failbit);
 
       this->elf_path = elf_path;
       file.seekg(0, std::ios::end);
@@ -175,12 +159,12 @@ namespace ldb {
 
       if (not data) return "";
 
-      if (str_header.sh_offset > data_size) return "";
+      if (str_header.sh_offset > data_size) throw std::runtime_error("Invalid string table offset");
       char* dptr = data.get() + str_header.sh_offset;
 
       std::memcpy(string_table.data(), dptr, str_header.sh_size);
 
-      if (string_table[0] != '\0') { return ""; }
+      if (string_table[0] != '\0') throw std::runtime_error("Invalid string table format");
       return string_table;
     }
 
@@ -188,7 +172,7 @@ namespace ldb {
     bool ELFFile::parseSections() {
       sections.resize(header->e_shnum);
 
-      if (header->e_shoff > data_size) return false;
+      if (header->e_shoff > data_size) throw std::runtime_error("Invalid section header offset");
       char* dptr = data.get() + header->e_shoff;
 
       // Parse the all sections in one go
@@ -361,8 +345,12 @@ namespace ldb {
 
       for (const auto& lm : link_map) {
         try {
-          ELFFile elf(lm.second);
-          auto deb_info = elf.yieldDebugInfo();
+          ELFFile shared_lib(lm.second);
+          // We may fail to parse the lib
+          // For example if we don't have the permissions
+          if (not shared_lib.hasSymbolTable()) continue;
+
+          auto deb_info = shared_lib.yieldDebugInfo();
           auto new_symbols = deb_info->yieldSymbolTable();
           new_symbols->relocate(lm.first);
 
@@ -370,7 +358,10 @@ namespace ldb {
           else
             res->join(std::move(new_symbols));
           debug_info->appendSharedLibraries(lm.second);
-        } catch (std::runtime_error& e) { std::cout << e.what() << std::endl; }
+        } catch (std::runtime_error& e) {
+          tscl::logger("Failed to parse dynamic library " + lm.second + ": " + e.what(),
+                       tscl::Log::Warning);
+        }
       }
 
       auto* old_symtab = debug_info->getSymbolTable();
@@ -392,11 +383,48 @@ namespace ldb {
   std::unique_ptr<const DebugInfo> readDebugInfo(const std::filesystem::path& path,
                                                  Process& process) {
 
-    auto elf_file = ELFFile::make(path);
-    if (not elf_file) return nullptr;
-    if (not process.isAttached() and not process.attach()) return nullptr;
-    elf_file->parseDynamicSymbols(process);
-    return elf_file->yieldDebugInfo();
+    try {
+      ELFFile elf_file(path);
+      if (not process.isAttached() and not process.attach()) return nullptr;
+      elf_file.parseDynamicSymbols(process);
+      return elf_file.yieldDebugInfo();
+
+    } catch (std::runtime_error& e) {
+      tscl::logger("Failed to parse debug information: " + std::string(e.what()), tscl::Log::Error);
+      return nullptr;
+    }
+  }
+
+
+  std::optional<std::pair<std::string, size_t>> addr2Line(const std::filesystem::path& path,
+                                                          const Elf64_Addr addr) {
+    std::array<char, 128> buffer;
+    std::stringstream ss;
+
+    ss << "addr2line -e " << path << " " << std::hex << addr;
+
+    const std::string str_cmd = std::move(ss.str());
+    const char* cmd = str_cmd.c_str();
+
+    FILE* fp = popen(cmd, "r");
+    if (not fp) throw std::runtime_error("popen failed");
+
+    std::string output;
+    while (fgets(buffer.data(), buffer.size(), fp) != nullptr) { output += buffer.data(); }
+
+    const int status = pclose(fp);
+    if (WEXITSTATUS(status) != 0) return std::nullopt;
+
+    std::pair<std::string, size_t> res;
+
+    const size_t separator = output.find(":");
+    std::string str_pos = output.substr(separator + 1);
+
+    res.first = output.substr(0, separator);
+    if (res.first == "??" or str_pos == "??") return std::nullopt;
+    res.second = strtoul(str_pos.c_str(), nullptr, 10);
+
+    return res;
   }
 
 }// namespace ldb

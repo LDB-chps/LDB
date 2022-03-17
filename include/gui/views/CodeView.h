@@ -1,12 +1,7 @@
 #pragma once
-
 #include "TracerView.h"
 #include "gui/CodeDisplay.h"
-#include <ProcessTracer.h>
 #include <QLabel>
-#include <QPlainTextEdit>
-#include <QRegularExpression>
-#include <QSyntaxHighlighter>
 #include <QVBoxLayout>
 
 namespace ldb::gui {
@@ -15,10 +10,10 @@ namespace ldb::gui {
    * @brief The ObjdumpView class is a QWidget that displays the source code of the
    * currently selected process.
    */
-  class ObjdumpView : public QWidget, public TracerView {
+  class CodeView : public QWidget, public TracerView {
     Q_OBJECT
   public:
-    explicit ObjdumpView(TracerPanel* parent);
+    explicit CodeView(TracerPanel* parent);
 
   public slots:
 
@@ -38,5 +33,4 @@ namespace ldb::gui {
     QVBoxLayout* layout;
     CodeDisplay* code_display;
   };
-
 }// namespace ldb::gui

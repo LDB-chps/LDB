@@ -46,8 +46,13 @@ namespace ldb::gui {
     top_widget->setLayout(top_panel_layout);
     horizontal_splitter->addWidget(top_widget);
 
-    code_view = new ObjdumpView(this);
+    code_view = new CodeView(this);
     top_panel_layout->addWidget(code_view);
+    connect(this, &TracerPanel::executionStarted, [&]() { code_view->setHighlightedLine(-1); });
+
+    objdump_view = new ObjdumpView(this);
+    top_panel_layout->addWidget(objdump_view);
+    connect(this, &TracerPanel::executionStarted, [&]() { objdump_view->setHighlightedLine(-1); });
 
     // Setup the bottom panel
     // MESSAGE PANEL || INFORMATION PANEL
@@ -60,6 +65,24 @@ namespace ldb::gui {
     horizontal_splitter->setStretchFactor(0, 6);
     // Low stretch factor for the bottom side
     horizontal_splitter->setStretchFactor(1, 3);
+
+    auto* information_tab = new QTabWidget(vertical_splitter);
+    information_tab->setIconSize(QSize(16, 16));
+    vertical_splitter->addWidget(information_tab);
+
+    // Setup the tab where the stack trace will be displayed
+    stack_trace_view = new StackTraceView(this);
+    information_tab->addTab(stack_trace_view, "Stack trace");
+    information_tab->setTabIcon(0, QIcon(":/icons/stack-fill.png"));
+
+    variable_view = new VariableView(this);
+    information_tab->addTab(variable_view, "Registers");
+    information_tab->setTabIcon(1, QIcon(":/icons/view-module.png"));
+
+    // Setup the tab where the loaded libraries will be displayed
+    auto libs = new LibraryView(this);
+    information_tab->addTab(libs, "Loaded libraries");
+    information_tab->setTabIcon(2, QIcon(":/icons/list-settings-line.png"));
 
     auto* message_tabs = new QTabWidget(vertical_splitter);
     message_tabs->setIconSize(QSize(16, 16));
@@ -86,24 +109,6 @@ namespace ldb::gui {
       pty_handler->reassignTo(process_tracer->getProcess().getMasterFd());
     });
     connect(this, &TracerPanel::executionEnded, [&]() { pty_handler->reassignTo(-1); });
-
-    auto* information_tab = new QTabWidget(vertical_splitter);
-    information_tab->setIconSize(QSize(16, 16));
-    vertical_splitter->addWidget(information_tab);
-
-    // Setup the tab where the stack trace will be displayed
-    stack_trace_view = new StackTraceView(this);
-    information_tab->addTab(stack_trace_view, "Stack trace");
-    information_tab->setTabIcon(0, QIcon(":/icons/stack-fill.png"));
-
-    variable_view = new VariableView(this);
-    information_tab->addTab(variable_view, "Registers");
-    information_tab->setTabIcon(1, QIcon(":/icons/view-module.png"));
-
-    // Setup the tab where the loaded libraries will be displayed
-    auto libs = new LibraryView(this);
-    information_tab->addTab(libs, "Loaded libraries");
-    information_tab->setTabIcon(2, QIcon(":/icons/list-settings-line.png"));
   }
 
   TracerPanel::~TracerPanel() {
@@ -160,6 +165,8 @@ namespace ldb::gui {
     emit executionEnded();
 
     bool res = process_tracer->restart();
+    // Setup a new signal handler
+
     // Setup a new signal handler
     if (not res) tscl::logger("Failed to reset the process.", tscl::Log::Error);
     else

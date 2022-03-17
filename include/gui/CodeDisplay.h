@@ -44,7 +44,8 @@ namespace ldb::gui {
      */
     void setSelectedLine(int line) {
       selected_line = line;
-    };
+      setExtraSelections({});
+    }
 
   private slots:
     void updateLineNumberWidth(int new_block_count);

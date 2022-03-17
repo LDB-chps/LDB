@@ -6,6 +6,7 @@ add_library(views
         TracerToolBar.cpp ${CURRENT_INCLUDE_DIR}/TracerToolBar.h
         StackTraceView.cpp ${CURRENT_INCLUDE_DIR}/StackTraceView.h
         ObjdumpView.cpp ${CURRENT_INCLUDE_DIR}/ObjdumpView.h
+        CodeView.cpp ${CURRENT_INCLUDE_DIR}/CodeView.h
         )
 target_link_libraries(views PUBLIC tracing Qt6::Core Qt6::Gui Qt6::Widgets)
 target_include_directories(views PUBLIC ${INCLUDE_DIR} ${CURRENT_INCLUDE_DIR})

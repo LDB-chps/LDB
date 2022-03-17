@@ -41,10 +41,14 @@ namespace ldb {
     SignalHandler(Process* process);
     virtual ~SignalHandler() = default;
 
-    // Called when the process is restarted
-    // By default it does nothing, but can be used by subclasses to reset
-    // their internal state
-    virtual void reset(){};
+    /**
+     * @brief This signal is called whenever the process is restarted
+     * This avoids the need to create a new SignalHandler for the new process
+     * @param p A pointer to the new process
+     */
+    virtual void reset(Process* p) {
+      process = p;
+    }
 
     SignalEvent nextSignal();
     virtual SignalEvent handleEvent(const SignalEvent& event);

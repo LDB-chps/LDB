@@ -32,7 +32,7 @@ namespace ldb {
     if (not process) throw std::runtime_error("ProcessTracer: failed to reset the process");
     waitpid(process->getPid(), nullptr, 0);
     process->resume();
-    if (signal_handler) signal_handler->reset();
+    signal_handler->reset(process.get());
 
     return true;
   }

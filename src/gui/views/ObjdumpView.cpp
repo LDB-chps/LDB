@@ -3,7 +3,6 @@
 #include <QFile>
 #include <QLayout>
 #include <QMessageBox>
-#include <QProgressDialog>
 #include <QTextBlock>
 #include <array>
 #include <cstdio>
@@ -29,45 +28,63 @@ namespace ldb::gui {
       return result;
     }
 
-  }// namespace
+    // Inspired from https://doc.qt.io/qt-5/qtwidgets-richtext-syntaxhighlighter-example.html
+    class ObjdumpHighlighter : public QSyntaxHighlighter {
+    public:
+      ObjdumpHighlighter(QTextDocument* parent = nullptr);
 
-  ObjdumpHighlighter::ObjdumpHighlighter(QTextDocument* parent) : QSyntaxHighlighter(parent) {
-    HighlightingRule rule;
+    protected:
+      void highlightBlock(const QString& text) override;
 
-    QTextCharFormat format;
+    private:
+      struct HighlightingRule {
+        QRegularExpression pattern;
+        QTextCharFormat format;
+      };
+      QVector<HighlightingRule> highlightingRules;
+    };
 
-    format.setForeground(QColor::fromRgb(125, 220, 125));
-    highlightingRules.append(HighlightingRule{QRegularExpression(QStringLiteral("<.+>")), format});
 
-    format.setForeground(QColor::fromRgb(242, 90, 90));
-    highlightingRules.append(HighlightingRule{
-            QRegularExpression(QStringLiteral("<File too big for display>")), format});
+    ObjdumpHighlighter::ObjdumpHighlighter(QTextDocument* parent) : QSyntaxHighlighter(parent) {
+      HighlightingRule rule;
 
-    format.setForeground(QColor::fromRgb(97, 242, 194));
-    highlightingRules.append(
-            HighlightingRule{QRegularExpression(QStringLiteral("[a-f0-9]+:")), format});
+      QTextCharFormat format;
 
-    format.setForeground(QColor::fromRgb(145, 242, 145));
-    highlightingRules.append(
-            HighlightingRule{QRegularExpression(QStringLiteral("[a-f0-9]+ <.+>:")), format});
+      format.setForeground(QColor::fromRgb(125, 220, 125));
+      highlightingRules.append(
+              HighlightingRule{QRegularExpression(QStringLiteral("<.+>")), format});
 
-    format.setForeground(QColor::fromRgb(48, 242, 242));
-    highlightingRules.append(
-            HighlightingRule{QRegularExpression(QStringLiteral("\\$?0x[a-f0-9]+")), format});
+      format.setForeground(QColor::fromRgb(242, 90, 90));
+      highlightingRules.append(HighlightingRule{
+              QRegularExpression(QStringLiteral("<File too big for display>")), format});
 
-    format.setForeground(QColor::fromRgb(216, 17, 89));
-    highlightingRules.append(HighlightingRule{QRegularExpression(QStringLiteral("%\\w+")), format});
-  }
+      format.setForeground(QColor::fromRgb(97, 242, 194));
+      highlightingRules.append(
+              HighlightingRule{QRegularExpression(QStringLiteral("[a-f0-9]+:")), format});
 
-  void ObjdumpHighlighter::highlightBlock(const QString& text) {
-    for (const HighlightingRule& rule : qAsConst(highlightingRules)) {
-      QRegularExpressionMatchIterator matchIterator = rule.pattern.globalMatch(text);
-      while (matchIterator.hasNext()) {
-        QRegularExpressionMatch match = matchIterator.next();
-        setFormat(match.capturedStart(), match.capturedLength(), rule.format);
+      format.setForeground(QColor::fromRgb(145, 242, 145));
+      highlightingRules.append(
+              HighlightingRule{QRegularExpression(QStringLiteral("[a-f0-9]+ <.+>:")), format});
+
+      format.setForeground(QColor::fromRgb(48, 242, 242));
+      highlightingRules.append(
+              HighlightingRule{QRegularExpression(QStringLiteral("\\$?0x[a-f0-9]+")), format});
+
+      format.setForeground(QColor::fromRgb(216, 17, 89));
+      highlightingRules.append(
+              HighlightingRule{QRegularExpression(QStringLiteral("%\\w+")), format});
+    }
+
+    void ObjdumpHighlighter::highlightBlock(const QString& text) {
+      for (const HighlightingRule& rule : qAsConst(highlightingRules)) {
+        QRegularExpressionMatchIterator matchIterator = rule.pattern.globalMatch(text);
+        while (matchIterator.hasNext()) {
+          QRegularExpressionMatch match = matchIterator.next();
+          setFormat(match.capturedStart(), match.capturedLength(), rule.format);
+        }
       }
     }
-  }
+  }// namespace
 
   ObjdumpView::ObjdumpView(TracerPanel* parent) : QWidget(parent), TracerView(parent) {
     layout = new QVBoxLayout;
@@ -88,23 +105,6 @@ namespace ldb::gui {
     setLayout(layout);
   }
 
-  void ObjdumpView::openFile(const QString& path) {
-    QFile file(path);
-    if (file.open(QIODevice::ReadOnly)) {
-      file_path = path;
-      label_file_path->setText(path);
-      QString text = file.readAll();
-      code_display->setPlainText(text);
-      setHighlightedLine(-1);
-    }
-  }
-
-  void ObjdumpView::closeFile() {
-    file_path = "";
-    label_file_path->setText("Mo file to display");
-    code_display->setPlainText("");
-  }
-
   void ObjdumpView::setHighlightedLine(int line) {
     code_display->setSelectedLine(line);
   }
@@ -113,6 +113,8 @@ namespace ldb::gui {
     ProcessTracer* tracer = nullptr;
     std::unique_ptr<StackTrace> stack_trace = nullptr;
     const SymbolTable* symtab = nullptr;
+
+    setHighlightedLine(-1);
 
     if (not(tracer = tracer_panel->getTracer()) or not tracer->getProcess().isProbeable() or
         not(stack_trace = tracer->getStackTrace()) or not tracer->getDebugInfo() or
@@ -154,7 +156,6 @@ namespace ldb::gui {
 
       code_display->setPlainText(objdump_str);
 
-      current_address = frame.getAddress() + frame.getOffset() - res.second->getBaseAddress();
       last_path = current_object_file;
     }
 
