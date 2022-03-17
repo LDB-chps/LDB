@@ -1,6 +1,7 @@
 #include "Process.h"
 #include <csignal>
 #include <fcntl.h>
+#include <filesystem>
 #include <iostream>
 #include <mutex>
 #include <pty.h>
@@ -10,6 +11,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+namespace fs = std::filesystem;
 
 namespace ldb {
 
@@ -140,6 +142,9 @@ namespace ldb {
                                                 const std::vector<std::string>& args,
                                                 bool pipe_output, ClosePolicy close_policy) {
 
+    if (not std::filesystem::exists(command)) return nullptr;
+    const auto permissions = std::filesystem::status("file.txt").permissions();
+
     // In the case where we want to pipe the output, we must creates the pipes before forking
     // Thus we temporarily init the process with a -1 pid
     auto res = Process::fork(pipe_output, close_policy);
@@ -178,8 +183,7 @@ namespace ldb {
       // We really should manually copy the arguments properly,
       // But I don't want to spend too much time on that
       execv(command.c_str(), const_cast<char* const*>(argv_c.data()));
-      // Should only happen if execvp fails
-      exit(1);
+      throw std::runtime_error("Failed to execute the command");
     }
 
     if (res->getPid() == -1) { throw std::runtime_error("Failed to fork"); }

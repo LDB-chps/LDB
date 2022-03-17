@@ -88,5 +88,10 @@ namespace ldb::gui {
     item->setBackground(1, top_item);
     item->setBackground(2, top_item);
     item->setBackground(3, top_item);
+
+    if (stacktrace->isTruncated()) {
+      auto item = new QTreeWidgetItem(this);
+      item->setText(2, QString::fromStdString("(Truncated) < ... >"));
+    }
   }
 }// namespace ldb::gui

@@ -46,17 +46,14 @@ namespace ldb::gui {
     top_widget->setLayout(top_panel_layout);
     horizontal_splitter->addWidget(top_widget);
 
-    code_view = new CodeView(this);
+    code_view = new SourceCodeView(this);
     top_panel_layout->addWidget(code_view);
-    connect(this, &TracerPanel::executionStarted, [&]() { code_view->setHighlightedLine(-1); });
 
     objdump_view = new ObjdumpView(this);
     top_panel_layout->addWidget(objdump_view);
-    connect(this, &TracerPanel::executionStarted, [&]() { objdump_view->setHighlightedLine(-1); });
 
     // Setup the bottom panel
-    // MESSAGE PANEL || INFORMATION PANEL
-
+    // INFORMATION PANEL || MESSAGE PANEL
     auto* vertical_splitter = new QSplitter(Qt::Horizontal, horizontal_splitter);
     horizontal_splitter->addWidget(vertical_splitter);
 
@@ -68,6 +65,7 @@ namespace ldb::gui {
 
     auto* information_tab = new QTabWidget(vertical_splitter);
     information_tab->setIconSize(QSize(16, 16));
+    information_tab->setTabPosition(QTabWidget::West);
     vertical_splitter->addWidget(information_tab);
 
     // Setup the tab where the stack trace will be displayed
@@ -81,7 +79,7 @@ namespace ldb::gui {
 
     // Setup the tab where the loaded libraries will be displayed
     auto libs = new LibraryView(this);
-    information_tab->addTab(libs, "Loaded libraries");
+    information_tab->addTab(libs, "Libraries");
     information_tab->setTabIcon(2, QIcon(":/icons/list-settings-line.png"));
 
     auto* message_tabs = new QTabWidget(vertical_splitter);
@@ -165,9 +163,7 @@ namespace ldb::gui {
     emit executionEnded();
 
     bool res = process_tracer->restart();
-    // Setup a new signal handler
 
-    // Setup a new signal handler
     if (not res) tscl::logger("Failed to reset the process.", tscl::Log::Error);
     else
       tscl::logger("Process restarted.", tscl::Log::Information);

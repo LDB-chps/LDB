@@ -36,7 +36,10 @@ namespace ldb {
           frames.emplace_back("????", pc - offset, offset);
       }
       done = unw_step(&cursor) <= 0;
-      if (frames.size() > 50) done = true;
+      if (frames.size() > 50) {
+        is_truncated = true;
+        done = true;
+      }
     }
   }
 }// namespace ldb

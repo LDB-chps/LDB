@@ -45,6 +45,7 @@ namespace ldb::gui {
     void setSelectedLine(int line) {
       selected_line = line;
       setExtraSelections({});
+      highlightCurrentLine();
     }
 
   private slots:

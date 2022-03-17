@@ -86,7 +86,7 @@ namespace ldb::gui {
     }
   }// namespace
 
-  ObjdumpView::ObjdumpView(TracerPanel* parent) : QWidget(parent), TracerView(parent) {
+  ObjdumpView::ObjdumpView(TracerPanel* parent) : CodeView(parent) {
     layout = new QVBoxLayout;
     layout->setSpacing(0);
     layout->setContentsMargins(0, 0, 0, 0);
@@ -100,28 +100,27 @@ namespace ldb::gui {
     layout->addWidget(code_display);
     new ObjdumpHighlighter(code_display->document());
 
-    connect(parent, &TracerPanel::signalReceived, this, &ObjdumpView::updateCodeDisplay);
+    connect(parent, &TracerPanel::signalReceived, this, &ObjdumpView::refresh);
+    connect(parent, &TracerPanel::executionStarted, this, &ObjdumpView::clearContents);
+    connect(parent, &TracerPanel::executionEnded, this, &ObjdumpView::clearSelection);
 
     setLayout(layout);
   }
 
-  void ObjdumpView::setHighlightedLine(int line) {
-    code_display->setSelectedLine(line);
-  }
-
-  void ObjdumpView::updateCodeDisplay() {
+  void ObjdumpView::refresh() {
     ProcessTracer* tracer = nullptr;
     std::unique_ptr<StackTrace> stack_trace = nullptr;
     const SymbolTable* symtab = nullptr;
 
-    setHighlightedLine(-1);
+    code_display->setSelectedLine(-1);
 
-    if (not(tracer = tracer_panel->getTracer()) or not tracer->getProcess().isProbeable() or
-        not(stack_trace = tracer->getStackTrace()) or not tracer->getDebugInfo() or
-        not(symtab = tracer->getDebugInfo()->getSymbolTable()))
+    if (not(tracer = tracer_panel->getTracer()) or not tracer->getProcess().isProbeable()) return;
+
+    if (not(stack_trace = tracer->getStackTrace()) or stack_trace->isEmpty()) return;
+
+    if (not tracer->getDebugInfo() or not(symtab = tracer->getDebugInfo()->getSymbolTable()))
       return;
 
-    if (stack_trace->isEmpty()) return;
 
     const auto& frame = *stack_trace->begin();
     auto res = symtab->findInTable(frame.getAddress());
@@ -177,8 +176,7 @@ namespace ldb::gui {
     code_display->ensureCursorVisible();
 
     // Highlight the line for show the user where we are
-    setHighlightedLine(cursor.blockNumber());
-    code_display->highlightCurrentLine();
+    code_display->setSelectedLine(cursor.blockNumber());
   }
 
 }// namespace ldb::gui

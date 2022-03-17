@@ -27,12 +27,12 @@ namespace ldb {
     gui::MainWindow main_window;
     main_window.show();
 
-    tscl::Version::setCurrent(tscl::Version(0, 0, 1, "alpha"));
+    tscl::Version::setCurrent(tscl::Version(0, 5, 0, "alpha"));
     tscl::logger("Welcome, LDB version " + tscl::Version::current.to_string(),
                  tscl::Log::Information);
 
     // If the user has specified a command to trace, open it
-    if (argc > 2) {
+    if (argc >= 2) {
       auto [command, args] = parse_command(argc, argv);
       tscl::logger("Starting command: " + command, tscl::Log::Information);
       main_window.startCommand(command, args);

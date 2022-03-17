@@ -3,34 +3,36 @@
 #include "gui/CodeDisplay.h"
 #include <QLabel>
 #include <QVBoxLayout>
+#include <QWidget>
 
 namespace ldb::gui {
 
-  /**
-   * @brief The ObjdumpView class is a QWidget that displays the source code of the
-   * currently selected process.
-   */
+
   class CodeView : public QWidget, public TracerView {
-    Q_OBJECT
   public:
-    explicit CodeView(TracerPanel* parent);
+    CodeView(TracerPanel* parent);
 
   public slots:
 
-    /**
-     * @brief Highlight the given line
-     * @param line Index of the line to highlight. Set to -1 to disable the highlight
-     */
-    void setHighlightedLine(int line);
+    void clearSelection() {
+      code_display->setSelectedLine(-1);
+    }
 
-    void updateCodeDisplay();
+    void clearContents() {
+      code_display->clear();
+      last_path = "";
+      clearSelection();
+    }
 
-  private:
-    QThread* objdump_thread;
+    virtual void refresh() = 0;
+
+  protected:
     std::string last_path;
+
+    CodeDisplay* code_display;
     QString file_path;
     QLabel* label_file_path;
     QVBoxLayout* layout;
-    CodeDisplay* code_display;
   };
+
 }// namespace ldb::gui

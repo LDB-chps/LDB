@@ -1,10 +1,10 @@
 #pragma once
 
-#include "CodeView.h"
 #include "ObjdumpView.h"
 #include "ProcessTracer.h"
 #include "PtyHandler.h"
 #include "QtSignalHandler.h"
+#include "SourceCodeView.h"
 #include "StackTraceView.h"
 #include "TracerToolBar.h"
 #include "VariableView.h"
@@ -110,7 +110,7 @@ namespace ldb::gui {
     VariableView* variable_view = nullptr;
     StackTraceView* stack_trace_view = nullptr;
     ObjdumpView* objdump_view = nullptr;
-    CodeView* code_view = nullptr;
+    SourceCodeView* code_view = nullptr;
     PtyHandler* pty_handler = nullptr;
   };
 }// namespace ldb::gui

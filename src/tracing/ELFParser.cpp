@@ -222,7 +222,7 @@ namespace ldb {
       // Since we only parse functions, we may have allocated too much space
       // We shrink the table to the actual size
       // This also removes empty tables in the linked list
-      symbols->shrinkToFit();
+      if (symbols) symbols->shrinkToFit();
       debug_info->setSymbolTable(std::move(symbols));
     }
 

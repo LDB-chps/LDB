@@ -20,6 +20,10 @@ namespace ldb {
       return frames.empty();
     }
 
+    bool isTruncated() const {
+      return is_truncated;
+    }
+
     using iterator = std::vector<StackFrame>::iterator;
     using const_iterator = std::vector<StackFrame>::const_iterator;
 
@@ -39,6 +43,7 @@ namespace ldb {
 
   private:
     std::vector<StackFrame> frames;
+    bool is_truncated = false;
   };
 
 }// namespace ldb
