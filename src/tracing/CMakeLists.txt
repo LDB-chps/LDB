@@ -17,6 +17,9 @@ qt_add_library(tracing STATIC
         StackFrame.cpp ${CURRENT_INCLUDE_DIR}/StackFrame.h
         StackTrace.cpp ${CURRENT_INCLUDE_DIR}/StackTrace.h
         SignalHandler.cpp ${CURRENT_INCLUDE_DIR}/SignalHandler.h
+
+        BreakPointTable.cpp ${CURRENT_INCLUDE_DIR}/BreakPointTable.h
+        BreakPointHandler.cpp ${CURRENT_INCLUDE_DIR}/BreakPointHandler.h
         )
 target_include_directories(tracing PUBLIC ${CURRENT_INCLUDE_DIR})
 target_link_libraries(tracing PUBLIC tscl::tscl TBB::tbb Threads::Threads ${LIBDWARF_LIBRARIES} ${LIBELF_LIBRARIES}
