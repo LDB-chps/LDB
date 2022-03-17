@@ -73,7 +73,10 @@ namespace ldb::gui {
                       << "\\bvoid\\b"
                       << "\\bvolatile\\b"
                       << "\\binclude\\b"
-                      << "\\breturn\\b";
+                      << "\\breturn\\b"
+                      << "\\bwhile\\b"
+                      << "\\bif\\b"
+                      << "\\bfor\\b";
       foreach (const QString& pattern, keywordPatterns) {
         rule.pattern = QRegularExpression(pattern);
         rule.format = keywordFormat;
@@ -147,6 +150,7 @@ namespace ldb::gui {
 
     label_file_path = new QLabel(this);
     label_file_path->setText("No file to display");
+    label_file_path->setAlignment(Qt::AlignCenter);
     layout->addWidget(label_file_path);
 
     code_display = new CodeDisplay(this);

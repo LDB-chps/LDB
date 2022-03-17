@@ -7,9 +7,15 @@
 #include <QTableView>
 
 namespace ldb::gui {
+
   class BreakpointsDialog : public QDialog, public TracerView {
   public:
     BreakpointsDialog(TracerPanel* parent);
+
+  public slots:
+
+    void makeModel();
+    void clearModel();
 
   private:
     QLineEdit* search_bar;

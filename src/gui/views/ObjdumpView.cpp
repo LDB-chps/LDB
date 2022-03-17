@@ -93,6 +93,7 @@ namespace ldb::gui {
 
     label_file_path = new QLabel(this);
     label_file_path->setText("No file to display");
+    label_file_path->setAlignment(Qt::AlignCenter);
     layout->addWidget(label_file_path);
 
     code_display = new CodeDisplay(this);

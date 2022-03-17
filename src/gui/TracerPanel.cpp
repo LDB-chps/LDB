@@ -65,7 +65,7 @@ namespace ldb::gui {
 
     auto* information_tab = new QTabWidget(vertical_splitter);
     information_tab->setIconSize(QSize(16, 16));
-    information_tab->setTabPosition(QTabWidget::West);
+    information_tab->setTabPosition(QTabWidget::South);
     vertical_splitter->addWidget(information_tab);
 
     // Setup the tab where the stack trace will be displayed
@@ -84,6 +84,7 @@ namespace ldb::gui {
 
     auto* message_tabs = new QTabWidget(vertical_splitter);
     message_tabs->setIconSize(QSize(16, 16));
+    message_tabs->setTabPosition(QTabWidget::South);
     vertical_splitter->addWidget(message_tabs);
 
     // Setup the tab where the log will be displayed

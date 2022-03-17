@@ -50,12 +50,25 @@ namespace ldb {
       process = p;
     }
 
+    bool isMuted() {
+      return is_muted;
+    }
+
+    virtual void mute() {
+      is_muted = true;
+    }
+
+    virtual void unmute() {
+      is_muted = false;
+    }
+
     SignalEvent nextSignal();
     virtual SignalEvent handleEvent(const SignalEvent& event);
 
     void setIgnored(Signal signal, bool ignored);
 
   protected:
+    std::atomic<bool> is_muted;
     std::vector<bool> ignored_signals;
     Process* process;
   };
