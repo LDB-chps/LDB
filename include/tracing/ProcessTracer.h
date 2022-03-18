@@ -1,6 +1,7 @@
 
 #pragma once
 
+#include "BreakPointHandler.h"
 #include "DebugInfo.h"
 #include "ELFParser.h"
 #include "Process.h"
@@ -40,7 +41,7 @@ namespace ldb {
      * @param args The arguments used to launch the process.
      */
     ProcessTracer(std::unique_ptr<Process>&& process, std::string executable,
-                  std::vector<std::string> args);
+                  std::vector<std::string> args, std::unique_ptr<DebugInfo>&& debugInfo);
 
     /**
      * @brief Returns the path to the executable linked to this tracer
@@ -114,11 +115,21 @@ namespace ldb {
      * debug symbols are available
      */
     const DebugInfo* getDebugInfo() {
-      if (not debug_info and not failed_read_debug_info and
+      /*if (not debug_info and not failed_read_debug_info and
           isProbeableStatus(process->getStatus())) {
-        debug_info = readDebugInfo(executable_path, *process);
+        ELFFile elf(executable_path);
+
+        const auto info = elf.getDebugInfo();
+
+        const auto symbolTable = info->getSymbolTable();
+        Symbol* main_symbol = symbolTable->operator[]("_start");
+        // std::cout << "table symbol: " << std::hex << *symbolTable << std::endl;
+        // std::cout << "_start: " << std::hex << *main_symbol << std::endl;
+
+        elf.parseDynamicSymbols(*process);
+        debug_info = elf.yieldDebugInfo();
         failed_read_debug_info = debug_info != nullptr;
-      }
+      }*/
       return debug_info.get();
     }
 
@@ -149,6 +160,8 @@ namespace ldb {
     std::unique_ptr<const DebugInfo> debug_info;
 
     std::unique_ptr<SignalHandler> signal_handler;
+
+    std::unique_ptr<BreakPointHandler> breakpoint_handler;
 
     // When the user first tries to access the debug_info, we need to read it.
     // It cannot be parsed beforehand since we may parse it before the process exits the
