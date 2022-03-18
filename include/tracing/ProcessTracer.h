@@ -61,12 +61,10 @@ namespace ldb {
 
     void resume() {
       process->resume();
-      signal_handler->unmute();
     }
 
     void pause() {
       process->pause();
-      signal_handler->mute();
     }
 
     void abort() {

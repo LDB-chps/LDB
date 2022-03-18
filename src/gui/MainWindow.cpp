@@ -36,9 +36,6 @@ namespace ldb::gui {
     menu_bar->addAction(action_about);
     connect(action_about, &QAction::triggered, this, &MainWindow::startAboutPopup);
 
-    auto* action_help = new QAction("Help");
-    menu_bar->addAction(action_help);
-
     setMenuBar(menu_bar);
   }
 

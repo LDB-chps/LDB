@@ -14,7 +14,8 @@ namespace ldb {
     // The process automatically stops at launch when it is traced
     // We resume it
     waitpid(process->getPid(), nullptr, 0);
-    process->resume();
+    process->updateStatus(Process::Status::kStopped);
+    // process->resume();
 
     return std::make_unique<ProcessTracer>(std::move(process), command, args);
   }
@@ -31,7 +32,7 @@ namespace ldb {
     process = Process::fromCommand(executable_path, arguments, true);
     if (not process) throw std::runtime_error("ProcessTracer: failed to reset the process");
     waitpid(process->getPid(), nullptr, 0);
-    process->resume();
+    process->updateStatus(Process::Status::kStopped);
     signal_handler->reset(process.get());
 
     return true;

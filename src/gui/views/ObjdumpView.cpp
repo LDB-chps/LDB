@@ -104,6 +104,10 @@ namespace ldb::gui {
     connect(parent, &TracerPanel::signalReceived, this, &ObjdumpView::refresh);
     connect(parent, &TracerPanel::executionStarted, this, &ObjdumpView::clearContents);
     connect(parent, &TracerPanel::executionEnded, this, &ObjdumpView::clearSelection);
+    connect(parent, &TracerPanel::executionEnded, this, [this]() {
+      code_display->setSelectedLine(-1);
+      last_path.clear();
+    });
 
     setLayout(layout);
   }

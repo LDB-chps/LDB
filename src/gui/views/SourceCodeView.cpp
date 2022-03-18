@@ -11,6 +11,10 @@ namespace ldb::gui {
   namespace {
     // Taken from https://github.com/mocmeo/CppSyntaxHighlighter
     // (No time to create an in-depth syntax highlighter for this project)
+    //
+    // Note that this highlighter is far from complete and shows pretty poor performance on big
+    // files But this is not a problem for the current use case. We also assert that the source
+    // language is C/C++.
     class CodeViewHighlighter : public QSyntaxHighlighter {
     public:
       CodeViewHighlighter(QTextDocument* parent = nullptr);
@@ -42,6 +46,8 @@ namespace ldb::gui {
 
       keywordFormat.setForeground(QColor::fromRgb(216, 17, 89));
       QStringList keywordPatterns;
+      // Simple lists of C++ keywords
+      // Of course this is not a complete list, but it's enough for our purposes
       keywordPatterns << "\\bchar\\b"
                       << "\\bclass\\b"
                       << "\\bstruct\\b"
@@ -77,6 +83,7 @@ namespace ldb::gui {
                       << "\\bwhile\\b"
                       << "\\bif\\b"
                       << "\\bfor\\b";
+      // Insert each keyword pattern as a rule
       foreach (const QString& pattern, keywordPatterns) {
         rule.pattern = QRegularExpression(pattern);
         rule.format = keywordFormat;
@@ -170,8 +177,12 @@ namespace ldb::gui {
     std::unique_ptr<StackTrace> stack_trace = nullptr;
     const SymbolTable* symtab = nullptr;
 
+    // Unselect the current line
+    // If we fail to update the view, we don't want the previous line to be displayed
     code_display->setSelectedLine(-1);
 
+
+    // TODO: Refactor me !
     if (not(tracer = tracer_panel->getTracer()) or not tracer->getProcess().isProbeable() or
         not(stack_trace = tracer->getStackTrace()) or not tracer->getDebugInfo() or
         not(symtab = tracer->getDebugInfo()->getSymbolTable()))
@@ -182,12 +193,21 @@ namespace ldb::gui {
     std::filesystem::path source_file;
     int current_line = 0;
 
+    // Iterate on the stack until we find a function we know the source file of
     for (auto& it : *stack_trace) {
       auto res = symtab->findInTable(it.getAddress());
       if (not res.first) continue;
       std::filesystem::path current_object_file;
       size_t addr = it.getAddress() + it.getOffset() - res.second->getBaseAddress();
+
+      // If the process is paused, rip points to the next instruction
+      // Meaning we will get the next line, and not the current one
+      // To prevent this, we subtract 1 from the address before passing it to addr2line
+      //
+      // Note that this is not true for a process that has crashed, because rip points to the
+      // instruction that caused the crash
       if (tracer->getProcess().getStatus() == Process::Status::kStopped) addr -= 1;
+
       auto tmp = addr2Line(res.second->getObjectFile(), addr);
       if (tmp and not tmp->first.empty()) {
         source_file = tmp->first;
@@ -196,12 +216,14 @@ namespace ldb::gui {
       }
     }
 
+    // If we failed to find a source file, just return
     if (source_file.empty()) {
       last_path = "";
       return;
     }
 
-    // If we are in the same file as previously, no need to re-read the file
+    // If we are in the same file as previously, no need to re-read the file, we can just update the
+    // line
     if (source_file != last_path) {
 
       QFile file(QString::fromStdString(source_file));
@@ -217,9 +239,11 @@ namespace ldb::gui {
       last_path = source_file;
     }
 
+    // Qt TextEdit starts at line 0, but we start at line 1
+    // So we must subtract 1 from the line number
     code_display->setSelectedLine(current_line - 1);
 
-
+    // Focus the view on the current line
     QTextCursor cursor = code_display->textCursor();
     cursor.movePosition(QTextCursor::Start, QTextCursor::MoveAnchor);
     cursor.movePosition(QTextCursor::StartOfLine, QTextCursor::MoveAnchor);

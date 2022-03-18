@@ -11,10 +11,7 @@ namespace ldb::gui {
     action_open_folder = new QAction(QIcon(":/icons/folder-open-fill.png"), "Start command");
     connect(action_open_folder, &QAction::triggered, parent, &TracerPanel::displayCommandDialog);
     addAction(action_open_folder);
-
-    // Program execution section
-    label_program_name = new QLabel("Program: ");
-    addWidget(label_program_name);
+    addSeparator();
 
     action_reset = new QAction(QIcon(":/icons/skip-back-fill.png"), "Reset");
     action_reset->setEnabled(false);
@@ -34,16 +31,25 @@ namespace ldb::gui {
     addAction(action_stop);
     connect(action_stop, &QAction::triggered, parent, &TracerPanel::abortExecution);
 
-    label_pid = new QLabel("PID: ");
-    addWidget(label_pid);
-
     label_last_signal = new QLabel("");
     addWidget(label_last_signal);
 
-    auto* display_breakpoints =
-            new QAction(QIcon(":/icons/view-module.png"), "Display breakpoints");
-    addAction(display_breakpoints);
-    connect(display_breakpoints, &QAction::triggered, parent, &TracerPanel::displayBreakpoints);
+    addSeparator();
+
+    action_breakpoints = new QAction(QIcon(":/icons/breakpoint.png"), "Display breakpoints");
+    action_breakpoints->setEnabled(false);
+    addAction(action_breakpoints);
+
+    addSeparator();
+
+    // Program execution section
+    label_program_name = new QLabel("Program: ");
+    addWidget(label_program_name);
+
+    label_pid = new QLabel("PID: ");
+    addWidget(label_pid);
+
+    connect(action_breakpoints, &QAction::triggered, parent, &TracerPanel::displayBreakpoints);
 
     connect(parent, &TracerPanel::signalReceived, this, &TracerToolBar::updateView);
     connect(parent, &TracerPanel::executionEnded, this, &TracerToolBar::updateButtons);
@@ -52,16 +58,17 @@ namespace ldb::gui {
 
   void TracerToolBar::startView() {
 
+    label_last_signal->setText("");
     auto* tracer = tracer_panel->getTracer();
     label_program_name->setText("Program: " + QString::fromStdString(tracer->getExecutable()));
     label_pid->setText("PID: " + QString::number(tracer->getProcess().getPid()));
+    label_last_signal->setText("Waiting for program start");
 
     updateButtons();
   }
 
   void TracerToolBar::updateButtons() {
 
-    label_last_signal->setText("");
     auto status = Process::Status::kDead;
     auto ls = Signal::kUnknown;
 
@@ -69,7 +76,9 @@ namespace ldb::gui {
     if (tracer_panel->getTracer() != nullptr) {
       auto* tracer = tracer_panel->getTracer();
       status = tracer->getProcess().getStatus();
+      action_breakpoints->setEnabled(true);
     }
+
 
     if (status == Process::Status::kStopped) {
       action_toggle_play->setIcon(QIcon(":/icons/play-fill.png"));

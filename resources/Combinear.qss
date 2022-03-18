@@ -155,6 +155,13 @@ QMenuBar::item {
 QMenuBar::item:selected {
 	background:rgb(115, 115, 115);
 }
+
+QMenuBar::separator {
+     background-color: red;
+     width: 30;
+     height: 30px;
+}
+
 QMenu::item:selected {
 	color:rgb(255,255,255);
 	border-width:2px;
@@ -188,9 +195,7 @@ QTabWidget {
 QTabWidget::pane {
 		border-color: rgb(77,77,77);
 		background-color:rgb(101,101,101);
-		border-style: solid;
-		border-width: 1px;
-    	border-radius: 6px;
+
 }
 QTabWidget::tab-bar {
 		background-color:rgb(42,42,42);
@@ -208,10 +213,10 @@ QTabBar::tab {
 QTabBar::tab:selected, QTabBar::tab:last:selected, QTabBar::tab:hover {
   	background-color:rgb(101,101,101);
 }
-
 QTabBar::tab:!selected {
 
 }
+
 QCheckBox {
 	color:rgb(223,219,210);
 	padding: 2px;
@@ -246,4 +251,9 @@ QStatusBar {
 }
 QToolBar {
     spacing:10px;
+}
+QToolBar::separator {
+    background-color: rgb(110, 110, 110);
+    width: 1px;
+    height: 1px;
 }

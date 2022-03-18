@@ -27,6 +27,7 @@ namespace ldb::gui {
     QAction* action_toggle_play;
     QAction* action_stop;
     QAction* action_reset;
+    QAction* action_breakpoints;
     QLabel* label_program_name;
     QLabel* label_program_id;
     QLabel* label_current_file;

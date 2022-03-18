@@ -6,39 +6,63 @@
 namespace ldb::gui {
 
   namespace {
+    // We define our own proxy model to be able to sort by breakpoints status
+    //
+    // Since QModels must operate on any model, if we're not dealing with a BreakpointModel model,
+    // all calls are redirected to the parent class
+    // Rows are sorted using the QSortFilterProxyModel::lessThan() method
     class BreakpointSortProxyModel : public QSortFilterProxyModel {
     public:
-      BreakpointSortProxyModel(BreakpointModel* parent = nullptr)
-          : QSortFilterProxyModel(parent), source_model(parent) {}
+      BreakpointSortProxyModel(BreakpointModel* parent = nullptr, bool show_breakpoints = true)
+          : QSortFilterProxyModel(parent), source_model(parent),
+            show_breakpoints(show_breakpoints) {}
 
     protected:
-      bool filterAcceptsRow(int sourceRow, const QModelIndex& sourceParent) const override {
-        auto* sym = source_model->getSymbol(sourceRow);
-        if (sym == nullptr) { return false; }
-        return false;
-      }
+      // We must redefine the following methods to be able to sort by breakpoints status
+      bool filterAcceptsRow(int sourceRow, const QModelIndex& sourceParent) const override;
+      bool lessThan(const QModelIndex& left, const QModelIndex& right) const override;
 
-      bool lessThan(const QModelIndex& left, const QModelIndex& right) const override {
-        auto left_data = source_model->getSymbol(left.row());
-        auto right_data = source_model->getSymbol(left.row());
-
-        if (not left_data) {
-          return false;
-        } else if (not right_data) {
-          return true;
-        } else {
-          return left_data->getName() < right_data->getName();
-        }
-      }
-
-      void setSourceModel(BreakpointModel* source_model) {
-        QSortFilterProxyModel::setSourceModel(source_model);
-        this->source_model = source_model;
-      }
+      // We override this function to set the source_model to nullptr if it's not a BreakpointModel
+      void setSourceModel(QAbstractItemModel* sourceModel) override;
+      void setSourceModel(BreakpointModel* source_model);
 
     private:
       BreakpointModel* source_model;
+      bool show_breakpoints = true;
     };
+
+    bool BreakpointSortProxyModel::filterAcceptsRow(int sourceRow,
+                                                    const QModelIndex& sourceParent) const {
+      if (not source_model) return QSortFilterProxyModel::filterAcceptsRow(sourceRow, sourceParent);
+      auto* sym = source_model->getSymbol(sourceRow);
+      if (sym == nullptr) { return false; }
+      return show_breakpoints;
+    }
+
+    bool BreakpointSortProxyModel::lessThan(const QModelIndex& left,
+                                            const QModelIndex& right) const {
+      if (not source_model) return QSortFilterProxyModel::lessThan(left, right);
+
+      auto left_data = source_model->getSymbol(left.row());
+      auto right_data = source_model->getSymbol(left.row());
+
+      if (not left_data) {
+        return false;
+      } else if (not right_data) {
+        return true;
+      } else
+        return QSortFilterProxyModel::lessThan(left, right);
+    }
+
+    void BreakpointSortProxyModel::setSourceModel(BreakpointModel* source_model) {
+      QSortFilterProxyModel::setSourceModel(source_model);
+      this->source_model = source_model;
+    }
+
+    void BreakpointSortProxyModel::setSourceModel(QAbstractItemModel* sourceModel) {
+      QSortFilterProxyModel::setSourceModel(source_model);
+      this->source_model = dynamic_cast<BreakpointModel*>(sourceModel);
+    }
   }// namespace
 
   BreakpointModel::BreakpointModel(QObject* parent, TracerPanel* tp)
@@ -127,7 +151,7 @@ namespace ldb::gui {
     setWindowTitle("Breakpoints");
 
     model = new BreakpointModel(this, parent);
-    search_proxy = new QSortFilterProxyModel(this);
+    search_proxy = new BreakpointSortProxyModel(model, false);
     search_proxy->setSourceModel(model);
     search_proxy->setFilterKeyColumn(1);
     // search_proxy->sort(2, Qt::DescendingOrder);
@@ -195,8 +219,11 @@ namespace ldb::gui {
   void BreakpointsDialog::clearModel() {
     delete model;
     model = new BreakpointModel(this, tracer_panel);
-    search_proxy->setSourceModel(model);
+    search_proxy = new BreakpointSortProxyModel(model, false);
     function_list->setModel(search_proxy);
+
+    breakpoint_proxy = new BreakpointSortProxyModel(model, true);
+    breakpoint_list->setModel(breakpoint_proxy);
   }
 
 }// namespace ldb::gui
