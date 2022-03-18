@@ -4,12 +4,12 @@ namespace ldb {
 
   BreakPointHandler::BreakPointHandler(const pid_t pid) : pid(pid){};
 
-  void BreakPointHandler::add(const Elf64_Addr addr) {
-    breakPoints.add(pid, addr);
+  void BreakPointHandler::add(const Symbol& sym) {
+    breakPoints.add(pid, sym.getAddress());
   }
 
-  void BreakPointHandler::remove(const Elf64_Addr addr) {
-    breakPoints.remove(pid, addr);
+  void BreakPointHandler::remove(const Symbol& sym) {
+    breakPoints.remove(pid, sym.getAddress());
   }
 
   const bool BreakPointHandler::isBreakPoint(const Elf64_Addr addr) const {
@@ -32,7 +32,7 @@ namespace ldb {
     if (!currentAddr && currentAddr != addr) throw std::runtime_error("No breakpoint to execute");
 
     ptrace(PTRACE_SINGLESTEP, pid, NULL, NULL);
-    // waitchild(pid);
+  
     waitpid(pid, NULL, 0);
   }
 

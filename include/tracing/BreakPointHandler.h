@@ -5,7 +5,7 @@
 #include <sys/reg.h>
 #include <sys/wait.h>
 #include <unistd.h>
-
+#include "Symbol.h"
 #include "BreakPointTable.h"
 
 namespace ldb {
@@ -14,9 +14,13 @@ namespace ldb {
   public:
     BreakPointHandler(const pid_t pid);
 
-    void add(const Elf64_Addr addr);
+    const BreakPointTable& getBreakPoints() const {
+      return breakPoints;
+    }
 
-    void remove(const Elf64_Addr addr);
+    void add(const Symbol& sym);
+
+    void remove(const Symbol& sym);
 
     const bool isBreakPoint(const Elf64_Addr addr) const;
 
