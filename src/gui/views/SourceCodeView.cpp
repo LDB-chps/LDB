@@ -186,8 +186,9 @@ namespace ldb::gui {
       auto res = symtab->findInTable(it.getAddress());
       if (not res.first) continue;
       std::filesystem::path current_object_file;
-      auto tmp = addr2Line(res.second->getObjectFile(),
-                           it.getAddress() + it.getOffset() - res.second->getBaseAddress());
+      size_t addr = it.getAddress() + it.getOffset() - res.second->getBaseAddress();
+      if (tracer->getProcess().getStatus() == Process::Status::kStopped) addr -= 1;
+      auto tmp = addr2Line(res.second->getObjectFile(), addr);
       if (tmp and not tmp->first.empty()) {
         source_file = tmp->first;
         current_line = tmp->second;
@@ -220,7 +221,8 @@ namespace ldb::gui {
 
 
     QTextCursor cursor = code_display->textCursor();
-    cursor.movePosition(QTextCursor::Start);
+    cursor.movePosition(QTextCursor::Start, QTextCursor::MoveAnchor);
+    cursor.movePosition(QTextCursor::StartOfLine, QTextCursor::MoveAnchor);
     cursor.movePosition(QTextCursor::Down, QTextCursor::MoveAnchor, current_line - 1);
     code_display->setTextCursor(cursor);
     code_display->centerCursor();

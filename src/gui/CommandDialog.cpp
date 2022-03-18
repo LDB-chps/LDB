@@ -12,6 +12,7 @@ namespace ldb::gui {
     setWindowTitle("Select a command");
 
     layout = new QVBoxLayout;
+    layout->setSpacing(0);
     setLayout(layout);
 
 

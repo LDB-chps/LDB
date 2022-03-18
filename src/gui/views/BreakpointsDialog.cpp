@@ -121,6 +121,7 @@ namespace ldb::gui {
 
   BreakpointsDialog::BreakpointsDialog(TracerPanel* parent) : TracerView(parent) {
     auto* layout = new QVBoxLayout(this);
+    layout->setContentsMargins(0, 0, 0, 0);
     setLayout(layout);
 
     setWindowTitle("Breakpoints");
@@ -132,8 +133,22 @@ namespace ldb::gui {
     // search_proxy->sort(2, Qt::DescendingOrder);
 
 
+    QTabWidget* tab_widget = new QTabWidget(this);
+    tab_widget->tabBar()->setExpanding(true);
+    tab_widget->tabBar()->setDocumentMode(true);
+    layout->addWidget(tab_widget);
+
+    QWidget* search_panel = new QWidget(this);
+    QVBoxLayout* search_layout = new QVBoxLayout(search_panel);
+    search_layout->setContentsMargins(0, 0, 0, 0);
+    search_layout->setSpacing(0);
+    search_panel->setLayout(search_layout);
+    tab_widget->addTab(search_panel, "Add breakpoints");
+
     search_bar = new QLineEdit(this);
-    layout->addWidget(search_bar);
+    search_bar->setPlaceholderText("Search symbol");
+    search_layout->addWidget(search_bar);
+
 
     connect(search_bar, &QLineEdit::textChanged, search_proxy,
             &QSortFilterProxyModel::setFilterFixedString);
@@ -147,10 +162,16 @@ namespace ldb::gui {
     function_list->setEditTriggers(QAbstractItemView::NoEditTriggers);
     function_list->setModel(search_proxy);
     function_list->setWordWrap(true);
-    layout->addWidget(function_list);
+    search_layout->addWidget(function_list);
 
     breakpoint_proxy = new BreakpointSortProxyModel(model);
     breakpoint_proxy->setSourceModel(model);
+
+    QWidget* active_breakpoint_panel = new QWidget(this);
+    QVBoxLayout* active_layout = new QVBoxLayout(active_breakpoint_panel);
+    active_layout->setContentsMargins(0, 0, 0, 0);
+    active_breakpoint_panel->setLayout(active_layout);
+    tab_widget->addTab(active_breakpoint_panel, "Active breakpoints");
 
     breakpoint_list = new QTableView(this);
     breakpoint_list->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
@@ -161,8 +182,7 @@ namespace ldb::gui {
     breakpoint_list->setEditTriggers(QAbstractItemView::NoEditTriggers);
     breakpoint_list->setModel(breakpoint_proxy);
     breakpoint_list->setWordWrap(true);
-    layout->addWidget(new QLabel("Active Breakpoints"));
-    layout->addWidget(breakpoint_list);
+    active_layout->addWidget(breakpoint_list);
 
     connect(parent, &TracerPanel::signalReceived, this, &BreakpointsDialog::makeModel);
     connect(parent, &TracerPanel::executionEnded, this, &BreakpointsDialog::clearModel);

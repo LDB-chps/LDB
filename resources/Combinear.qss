@@ -119,10 +119,8 @@ QPushButton:disabled{
 	background-color: qlineargradient(spread:pad, x1:0.5, y1:1, x2:0.5, y2:0, stop:0 rgba(57, 57, 57, 255), stop:1 rgba(77, 77, 77, 255));
 }
 QLineEdit {
-	border-width: 1px; border-radius: 4px;
+	border-width: 1px;
 	border-color: rgb(58, 58, 58);
-	border-style: inset;
-	padding: 0 8px;
 	color: rgb(255, 255, 255);
 	background:rgb(100, 100, 100);
 	selection-background-color: rgb(187, 187, 187);
@@ -194,22 +192,25 @@ QTabWidget::pane {
 		border-width: 1px;
     	border-radius: 6px;
 }
+QTabWidget::tab-bar {
+		background-color:rgb(42,42,42);
+}
+
+QTabBar {
+    border-style: solid;
+}
+
 QTabBar::tab {
 	color:rgb(250,250,250);
+	padding: 5px;
 	border-style: solid;
-	border-top-color: qlineargradient(spread:pad, x1:0.5, y1:0.6, x2:0.5, y2:0.4, stop:0 rgba(115, 115, 115, 255), stop:1 rgba(95, 92, 93, 255));
-	border-right-color: qlineargradient(spread:pad, x1:0.4, y1:0.5, x2:0.6, y2:0.5, stop:0 rgba(115, 115, 115, 255), stop:1 rgba(95, 92, 93, 255));
-	border-left-color: qlineargradient(spread:pad, x1:0.6, y1:0.5, x2:0.4, y2:0.5, stop:0 rgba(115, 115, 115, 255), stop:1 rgba(95, 92, 93, 255));
-	border-bottom-color: rgb(101,101,101);
 }
 QTabBar::tab:selected, QTabBar::tab:last:selected, QTabBar::tab:hover {
   	background-color:rgb(101,101,101);
-  	margin-left: 0px;
-  	margin-right: 1px;
 }
+
 QTabBar::tab:!selected {
-    	margin-top: 1px;
-		margin-right: 1px;
+
 }
 QCheckBox {
 	color:rgb(223,219,210);
