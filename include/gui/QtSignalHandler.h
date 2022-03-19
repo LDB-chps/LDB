@@ -28,6 +28,7 @@ namespace ldb::gui {
   private slots:
 
     void resumeTracee(SignalEvent event);
+    void resetBreakpoint();
 
   private:
     void stopThread();

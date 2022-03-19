@@ -57,9 +57,9 @@ namespace ldb::gui {
   }
 
   SignalEvent QtSignalHandler::handleEvent(const SignalEvent& event) {
-    if (event.getSignal() == Signal::kSIGTRAP and breakpoint_handler->isAtBreakpoint()) {
-      breakpoint_handler->resetBreakpoint();
-    }
+    if (event.getSignal() == Signal::kSIGTRAP)
+      QMetaObject::invokeMethod(this, &QtSignalHandler::resetBreakpoint, Qt::QueuedConnection);
+
     if (process->getStatus() == Process::Status::kStopped and
         ignored_signals[static_cast<size_t>(event.getSignal())] and
         event.getSignal() != Signal::kSIGCONT) {
@@ -74,6 +74,14 @@ namespace ldb::gui {
   void QtSignalHandler::resumeTracee(SignalEvent event) {
     process->resume();
   }
+
+  void QtSignalHandler::resetBreakpoint() {
+    if (not breakpoint_handler->isAtBreakpoint()) return;
+    breakpoint_handler->resetBreakpoint();
+    ptrace(PTRACE_SINGLESTEP, process->getPid(), nullptr, nullptr);
+    waitpid(process->getPid(), nullptr, 0);
+  }
+
 
   void QtSignalHandler::workerLoop() {
     while (not worker_exit) {
