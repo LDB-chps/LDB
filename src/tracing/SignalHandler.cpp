@@ -95,6 +95,11 @@ namespace ldb {
   }
 
   SignalEvent SignalHandler::handleEvent(const SignalEvent& event) {
+    if (event.getSignal() == Signal::kSIGTRAP and breakpoint_handler->isAtBreakpoint()) {
+      breakpoint_handler->resetBreakpoint();
+      ptrace(PTRACE_SINGLESTEP, process->getPid(), nullptr, nullptr);
+      waitpid(process->getPid(), nullptr, 0);
+    }
     if (ignored_signals[static_cast<size_t>(event.getSignal())]) {
       int res = ptrace(PTRACE_CONT, process->getPid(), nullptr, nullptr);
       // If we failed to resume the process, we consider the signal as non-ignored

@@ -38,8 +38,19 @@ namespace ldb {
     bool is_fatal;
   };
 
+  /**
+   * @brief Handles signals from the process
+   *
+   * Base class for signal handlers that are responsible for catching and handling signals. This
+   * class is also responsible for breakpoints restoration.
+   */
   class SignalHandler {
   public:
+    /**
+     * @brief Constructs a SignalHandler for the given process and breakpoint handler
+     * @param process
+     * @param bph
+     */
     SignalHandler(Process* process, BreakPointHandler* bph);
     virtual ~SignalHandler() = default;
 
@@ -47,9 +58,11 @@ namespace ldb {
      * @brief This signal is called whenever the process is restarted
      * This avoids the need to create a new SignalHandler for the new process
      * @param p A pointer to the new process
+     * @param bph A pointer to the new breakpoint handler
      */
-    virtual void reset(Process* p) {
+    virtual void reset(Process* p, BreakPointHandler* bph) {
       process = p;
+      breakpoint_handler = bph;
     }
 
     bool isMuted() {
@@ -64,7 +77,18 @@ namespace ldb {
       is_muted = false;
     }
 
+    /**
+     * @brief Wait for a signal to be received, or throw on error
+     * @return The signal that was received
+     */
     SignalEvent waitEvent();
+
+    /**
+     * @brief Wait for @usec microseconds for a signal, and return after one was received or
+     * reaching timeout
+     * @param usec
+     * @return
+     */
     std::optional<SignalEvent> waitEvent(size_t usec);
 
     void setIgnored(Signal signal, bool ignored);
