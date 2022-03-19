@@ -5,6 +5,7 @@
 #include <sys/reg.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include "SymbolTable.h"
 #include "Symbol.h"
 #include "BreakPointTable.h"
 
@@ -15,16 +16,20 @@ namespace ldb {
     BreakPointHandler(const pid_t pid);
 
     const BreakPointTable& getBreakPoints() const {
-      return breakpoints;
+      return breakPoints;
     }
 
     void add(const Symbol& sym);
-
     void remove(const Symbol& sym);
+    void removeAll();
+
+
+    const std::vector<std::string> saveBreakpoints(const SymbolTable& symbols);
+    void refreshPid(const pid_t p);
+    void refreshBreakPoint(const SymbolTable& symbols, const std::vector<std::string>& old);
 
     bool isAtBreakpoint() const;
     bool isBreakPoint(Elf64_Addr addr) const;
-
 
     bool resetBreakpoint();
 
@@ -34,9 +39,9 @@ namespace ldb {
     void restoreBreakpoint(Elf64_Addr addr);
 
 
-    const pid_t pid;
-    BreakPointTable breakpoints;
-    std::optional<Elf64_Addr> current_addr;
+    pid_t pid;
+    BreakPointTable breakPoints;
+    std::optional<Elf64_Addr> currentAddr;
   };
 
 }// namespace ldb

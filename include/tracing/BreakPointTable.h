@@ -3,6 +3,7 @@
 #include <iostream>
 #include <map>
 #include <sys/ptrace.h>
+#include "SymbolTable.h"
 
 
 namespace ldb {
@@ -23,6 +24,9 @@ namespace ldb {
     void add(const pid_t pid, const Elf64_Addr addr);
 
     void remove(const pid_t pid, const Elf64_Addr addr);
+    void removeAll();
+
+    void refresh(const SymbolTable& symbols, const std::vector<std::string>& old);
 
     const bool isBreakPoint(const Elf64_Addr addr) const;
 

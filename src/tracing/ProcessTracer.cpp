@@ -28,16 +28,23 @@ namespace ldb {
     waitpid(process->getPid(), nullptr, 0);
     process->updateStatus(Process::Status::kStopped);
 
+    // We save breakpoint for the next execution like dynamic libs can change addr
+    auto oldBreakPoints = breakpoint_handler->saveBreakpoints(*debug_info->getSymbolTable());
+    breakpoint_handler->refreshPid(process->getPid());
+
     // We must re-read the symbols
     // While the path may not have changed, the user may have recompiled the program
     // in between, so this is a must
     readSymbols();
+
+    // We update the breakPoint table with new addresses
+    breakpoint_handler->refreshBreakPoint(*debug_info->getSymbolTable(), oldBreakPoints);
+
     signal_handler->reset(process.get());
     return true;
   }
 
   bool ProcessTracer::readSymbols() {
-
     if (process->getStatus() != Process::Status::kStopped) return false;
 
     // Read the static symbol table
