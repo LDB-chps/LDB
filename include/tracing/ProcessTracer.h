@@ -25,23 +25,11 @@ namespace ldb {
   class ProcessTracer {
   public:
     /**
-     * @brief launch a new process and trace it
-     * @param executable the program to execute
-     * @param args the args of the program
-     * @return A tracer attached to the new process
+     * @brief Start a new tracee
+     * @param command
+     * @param args
      */
-    static std::unique_ptr<ProcessTracer> fromCommand(const std::string& executable,
-                                                      const std::vector<std::string>& args);
-
-    /**
-     * @brief Builds a new tracer from an existing process
-     * @param debug_info The debug infos read from the elf file
-     * @param process The process to trace. Must be different than nullptr, and already traced.
-     * @param executable The executable of the process.
-     * @param args The arguments used to launch the process.
-     */
-    ProcessTracer(std::unique_ptr<Process>&& process, std::string executable,
-                  std::vector<std::string> args, std::unique_ptr<DebugInfo>&& debugInfo);
+    ProcessTracer(const std::string& command, const std::vector<std::string>& args);
 
     /**
      * @brief Returns the path to the executable linked to this tracer
@@ -50,18 +38,37 @@ namespace ldb {
      */
     const std::string& getExecutable();
 
+    const Process& getProcess() const {
+      return *process;
+    }
+
+
     /**
      * @brief Restart the process using the same arguments used to launch it in the first place
      * @return True if the process was restarted, false otherwise
      */
     bool restart();
 
-    const Process& getProcess() const {
-      return *process;
+    void resume() {
+      if (breakpoint_handler->isAtBreakpoint()) {
+        signal_handler->mute();
+        breakpoint_handler->resetBreakpoint();
+        signal_handler->unmute();
+      }
+
+      process->resume();
     }
 
-    void resume() {
-      process->resume();
+    void singlestep() {
+      if (process->getStatus() != Process::Status::kStopped) return;
+      if (breakpoint_handler->isAtBreakpoint()) {
+        signal_handler->mute();
+        breakpoint_handler->resetBreakpoint();
+        signal_handler->unmute();
+      }
+
+      // By default, the breakpoint handler jump to the next instruction when restoring a breakpoint
+      ptrace(PTRACE_SINGLESTEP, process->getPid(), nullptr, nullptr);
     }
 
     void pause() {
@@ -70,26 +77,6 @@ namespace ldb {
 
     void abort() {
       process->kill();
-    }
-
-    /**
-     * @brief The process this tracer is attached to has its output redirected to a file
-     * This functions returns the file descriptor of this file. This can be used for reading the
-     * output to a QtWindow
-     * @return
-     */
-    int getSlavePtty() {
-      return process->getSlaveFd();
-    }
-
-    /**
-     * @brief The process this tracer is attached to has its output redirected to a file
-     * This functions returns the file descriptor of this file. This can be used for reading the
-     * output to a QtWindow
-     * @return
-     */
-    int getMasterPtty() {
-      return process->getMasterFd();
     }
 
     /**
@@ -115,22 +102,20 @@ namespace ldb {
      * debug symbols are available
      */
     const DebugInfo* getDebugInfo() {
-      /*if (not debug_info and not failed_read_debug_info and
-          isProbeableStatus(process->getStatus())) {
-        ELFFile elf(executable_path);
-
-        const auto info = elf.getDebugInfo();
-
-        const auto symbolTable = info->getSymbolTable();
-        Symbol* main_symbol = symbolTable->operator[]("_start");
-        // std::cout << "table symbol: " << std::hex << *symbolTable << std::endl;
-        // std::cout << "_start: " << std::hex << *main_symbol << std::endl;
-
-        elf.parseDynamicSymbols(*process);
-        debug_info = elf.yieldDebugInfo();
-        failed_read_debug_info = debug_info != nullptr;
-      }*/
       return debug_info.get();
+    }
+
+    const SymbolTable* getSymbolTable() {
+      if (not debug_info) return nullptr;
+      return debug_info->getSymbolTable();
+    }
+
+    /**
+     * @brief Returns the current state of the process
+     * @return The current state of the process
+     */
+    BreakPointHandler* getBreakPointHandler() {
+      return breakpoint_handler.get();
     }
 
     /**
@@ -152,6 +137,8 @@ namespace ldb {
     }
 
   private:
+    bool readSymbols();
+
     std::unique_ptr<Process> process;
 
     std::string executable_path;
@@ -162,13 +149,6 @@ namespace ldb {
     std::unique_ptr<SignalHandler> signal_handler;
 
     std::unique_ptr<BreakPointHandler> breakpoint_handler;
-
-    // When the user first tries to access the debug_info, we need to read it.
-    // It cannot be parsed beforehand since we may parse it before the process exits the
-    // execve trap.
-    // This flag only serves to indicate that we tried to read the debug_info, and failed
-    // to prevent future attempts
-    bool failed_read_debug_info = false;
   };
 
 }// namespace ldb

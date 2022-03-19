@@ -1,3 +1,4 @@
+#pragma once
 #include <elf.h>
 #include <iostream>
 #include <map>

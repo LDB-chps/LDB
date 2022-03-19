@@ -15,25 +15,28 @@ namespace ldb {
     BreakPointHandler(const pid_t pid);
 
     const BreakPointTable& getBreakPoints() const {
-      return breakPoints;
+      return breakpoints;
     }
 
     void add(const Symbol& sym);
 
     void remove(const Symbol& sym);
 
-    const bool isBreakPoint(const Elf64_Addr addr) const;
+    bool isAtBreakpoint() const;
+    bool isBreakPoint(Elf64_Addr addr) const;
 
-    void restoreInstruction(const Elf64_Addr addr);
 
-    void executeBpInstruction(const Elf64_Addr addr);
+    bool resetBreakpoint();
 
-    void submitBreakPoint(const Elf64_Addr addr);
+  private:
+    void restoreInstruction(Elf64_Addr addr);
+    void executeInstruction(Elf64_Addr addr);
+    void restoreBreakpoint(Elf64_Addr addr);
 
-  public:
+
     const pid_t pid;
-    BreakPointTable breakPoints;
-    std::optional<Elf64_Addr> currentAddr;
+    BreakPointTable breakpoints;
+    std::optional<Elf64_Addr> current_addr;
   };
 
 }// namespace ldb

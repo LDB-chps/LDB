@@ -132,6 +132,11 @@ namespace ldb::gui {
     }
   }
 
+  void TracerPanel::singlestep() {
+    if (not process_tracer) return;
+    process_tracer->singlestep();
+  }
+
   void TracerPanel::abortExecution() {
 
     if (not process_tracer or process_tracer->getProcess().getStatus() == Process::Status::kDead or
@@ -201,7 +206,7 @@ namespace ldb::gui {
 
     try {
       tscl::logger("Starting executable: " + command, tscl::Log::Information);
-      process_tracer = ProcessTracer::fromCommand(command, args);
+      process_tracer = std::make_unique<ProcessTracer>(command, args);
       if (not process_tracer) {
         tscl::logger("Failed to start executable", tscl::Log::Error);
         return false;

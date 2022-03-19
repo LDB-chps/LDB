@@ -18,6 +18,7 @@ namespace ldb::gui {
 
   private slots:
     void updateButtons();
+    
   signals:
     // Emitted when the open command button is clicked
     void openCommand();
@@ -28,6 +29,7 @@ namespace ldb::gui {
     QAction* action_stop;
     QAction* action_reset;
     QAction* action_breakpoints;
+    QAction* action_step;
     QLabel* label_program_name;
     QLabel* label_program_id;
     QLabel* label_current_file;

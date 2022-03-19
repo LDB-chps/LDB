@@ -12,6 +12,7 @@ namespace ldb {
   SignalHandler::SignalHandler(Process* process) : process(process), is_muted(false) {
     ignored_signals.resize(static_cast<size_t>(Signal::kSignalCount));
     ignored_signals.assign(ignored_signals.size(), false);
+
     setIgnored(Signal::kSIGCHLD, true);
     setIgnored(Signal::kSIGALRM, true);
     setIgnored(Signal::kSIGCONT, true);
@@ -50,7 +51,7 @@ namespace ldb {
         res = waitpid(process->getPid(), &status, WNOHANG);
         usleep(delta);
         slept += delta;
-      } while (slept <= usec and res == 0);
+      } while (slept <= usec and res == 0 and not is_muted);
 
 
     if (res == 0) {

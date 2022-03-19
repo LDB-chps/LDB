@@ -3,6 +3,7 @@
 #include <condition_variable>
 #include <optional>
 #include <thread>
+// #include "BreakPointHandler.h"
 
 namespace ldb {
 
@@ -88,9 +89,9 @@ namespace ldb {
      * Guaranteed to return a valid event if timeout is nullptr and no error occurs.
      */
     std::optional<SignalEvent> pollEvent(size_t utimeout);
-
     std::atomic<bool> is_muted;
     std::vector<bool> ignored_signals;
+    // BreakPointHandler* breakpoint_handler;
     Process* process;
   };
 

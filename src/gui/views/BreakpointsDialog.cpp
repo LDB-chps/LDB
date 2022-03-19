@@ -13,9 +13,18 @@ namespace ldb::gui {
     // Rows are sorted using the QSortFilterProxyModel::lessThan() method
     class BreakpointSortProxyModel : public QSortFilterProxyModel {
     public:
-      BreakpointSortProxyModel(BreakpointModel* parent = nullptr, bool show_breakpoints = true)
-          : QSortFilterProxyModel(parent), source_model(parent),
-            show_breakpoints(show_breakpoints) {}
+      explicit BreakpointSortProxyModel(BreakpointModel* parent, bool sbreak = true)
+          : QSortFilterProxyModel(parent), source_model(parent), show_breakpoints(sbreak) {
+        QSortFilterProxyModel::setSourceModel(parent);
+      }
+
+      int rowCount(const QModelIndex& parent) const {
+        return source_model->rowCount();
+      }
+
+      int columnCount(const QModelIndex& parent) const {
+        return source_model->columnCount();
+      }
 
     protected:
       // We must redefine the following methods to be able to sort by breakpoints status
@@ -36,7 +45,9 @@ namespace ldb::gui {
       if (not source_model) return QSortFilterProxyModel::filterAcceptsRow(sourceRow, sourceParent);
       auto* sym = source_model->getSymbol(sourceRow);
       if (sym == nullptr) { return false; }
-      return show_breakpoints;
+      return ((show_breakpoints and source_model->isBreakpoint(sym)) or
+              (not show_breakpoints and not source_model->isBreakpoint(sym))) and
+             QSortFilterProxyModel::filterAcceptsRow(sourceRow, sourceParent);
     }
 
     bool BreakpointSortProxyModel::lessThan(const QModelIndex& left,
@@ -70,11 +81,9 @@ namespace ldb::gui {
 
   int BreakpointModel::rowCount(const QModelIndex& parent) const {
     auto* tracer = tracer_panel->getTracer();
-    if (not tracer) return 0;
-    auto* debug_info = tracer->getDebugInfo();
-    if (not debug_info) return 0;
-    auto* symtab = debug_info->getSymbolTable();
-    if (not symtab) return 0;
+
+    const SymbolTable* symtab = nullptr;
+    if (not tracer or not(symtab = tracer->getSymbolTable())) return 0;
     return symtab->getSize();
   }
 
@@ -91,11 +100,8 @@ namespace ldb::gui {
     if (not index.isValid()) return {};
     if (role == Qt::DisplayRole) {
       auto* tracer = tracer_panel->getTracer();
-      if (not tracer) return {};
-      auto* debug_info = tracer->getDebugInfo();
-      if (not debug_info) return {};
-      auto* symtab = debug_info->getSymbolTable();
-      if (not symtab) return {};
+      const SymbolTable* symtab = nullptr;
+      if (not tracer or not(symtab = tracer->getSymbolTable())) return {};
 
       auto* symbol = symtab->at(index.row());
       if (not symbol) return {};
@@ -143,19 +149,39 @@ namespace ldb::gui {
     return symtab->at(row);
   }
 
-  BreakpointsDialog::BreakpointsDialog(TracerPanel* parent) : TracerView(parent) {
+  bool BreakpointModel::isBreakpoint(const Symbol* sym) const {
+    auto* tracer = tracer_panel->getTracer();
+    if (not tracer) return false;
+    auto* breakpoints = tracer->getBreakPointHandler();
+    if (not breakpoints) return false;
+    return breakpoints->isBreakPoint(sym->getAddress());
+  }
+
+  void BreakpointModel::toggleBreakpoint(const QModelIndex& pos) {
+    auto* tracer = tracer_panel->getTracer();
+    if (not tracer) return;
+    auto* breakpoints = tracer->getBreakPointHandler();
+    if (not breakpoints) return;
+    auto* debug_info = tracer->getDebugInfo();
+    if (not debug_info) return;
+    auto* symtab = debug_info->getSymbolTable();
+    if (not symtab) return;
+
+    auto* symbol = symtab->at(pos.row());
+    if (not symbol) return;
+
+    if (isBreakpoint(symbol)) breakpoints->remove(*symbol);
+    else
+      breakpoints->add(*symbol);
+    emit dataChanged(pos, pos);
+  }
+
+  BreakpointsDialog::BreakpointsDialog(TracerPanel* parent) : TracerView(parent), model(nullptr) {
     auto* layout = new QVBoxLayout(this);
     layout->setContentsMargins(0, 0, 0, 0);
     setLayout(layout);
 
     setWindowTitle("Breakpoints");
-
-    model = new BreakpointModel(this, parent);
-    search_proxy = new BreakpointSortProxyModel(model, false);
-    search_proxy->setSourceModel(model);
-    search_proxy->setFilterKeyColumn(1);
-    // search_proxy->sort(2, Qt::DescendingOrder);
-
 
     QTabWidget* tab_widget = new QTabWidget(this);
     tab_widget->tabBar()->setExpanding(true);
@@ -173,10 +199,6 @@ namespace ldb::gui {
     search_bar->setPlaceholderText("Search symbol");
     search_layout->addWidget(search_bar);
 
-
-    connect(search_bar, &QLineEdit::textChanged, search_proxy,
-            &QSortFilterProxyModel::setFilterFixedString);
-
     function_list = new QTableView(this);
     function_list->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     function_list->verticalHeader()->setVisible(false);
@@ -184,12 +206,8 @@ namespace ldb::gui {
     function_list->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     function_list->setSelectionBehavior(QAbstractItemView::SelectRows);
     function_list->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    function_list->setModel(search_proxy);
     function_list->setWordWrap(true);
     search_layout->addWidget(function_list);
-
-    breakpoint_proxy = new BreakpointSortProxyModel(model);
-    breakpoint_proxy->setSourceModel(model);
 
     QWidget* active_breakpoint_panel = new QWidget(this);
     QVBoxLayout* active_layout = new QVBoxLayout(active_breakpoint_panel);
@@ -204,15 +222,16 @@ namespace ldb::gui {
     breakpoint_list->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     breakpoint_list->setSelectionBehavior(QAbstractItemView::SelectRows);
     breakpoint_list->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    breakpoint_list->setModel(breakpoint_proxy);
     breakpoint_list->setWordWrap(true);
     active_layout->addWidget(breakpoint_list);
 
-    connect(parent, &TracerPanel::signalReceived, this, &BreakpointsDialog::makeModel);
+    connect(parent, &TracerPanel::executionStarted, this, &BreakpointsDialog::makeModel);
     connect(parent, &TracerPanel::executionEnded, this, &BreakpointsDialog::clearModel);
+    clearModel();
   }
 
   void BreakpointsDialog::makeModel() {
+    clearModel();
     model->update();
   }
 
@@ -220,10 +239,21 @@ namespace ldb::gui {
     delete model;
     model = new BreakpointModel(this, tracer_panel);
     search_proxy = new BreakpointSortProxyModel(model, false);
+    search_proxy->setFilterKeyColumn(1);
+    search_proxy->setFilterFixedString(search_bar->text());
     function_list->setModel(search_proxy);
+    connect(function_list, &QTableView::doubleClicked, model, [&](const QModelIndex& index) {
+      model->toggleBreakpoint(search_proxy->mapToSource(index));
+    });
+    connect(search_bar, &QLineEdit::textChanged, search_proxy,
+            &QSortFilterProxyModel::setFilterFixedString);
 
     breakpoint_proxy = new BreakpointSortProxyModel(model, true);
+    breakpoint_proxy->setFilterKeyColumn(1);
     breakpoint_list->setModel(breakpoint_proxy);
+    connect(breakpoint_list, &QTableView::doubleClicked, model, [&](const QModelIndex& index) {
+      model->toggleBreakpoint(breakpoint_proxy->mapToSource(index));
+    });
   }
 
 }// namespace ldb::gui

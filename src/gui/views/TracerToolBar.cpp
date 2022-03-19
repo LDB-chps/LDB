@@ -13,7 +13,7 @@ namespace ldb::gui {
     addAction(action_open_folder);
     addSeparator();
 
-    action_reset = new QAction(QIcon(":/icons/skip-back-fill.png"), "Reset");
+    action_reset = new QAction(QIcon(":/icons/replay.png"), "Reset");
     action_reset->setEnabled(false);
     // action_reset->setEnabled(false);
     addAction(action_reset);
@@ -21,7 +21,6 @@ namespace ldb::gui {
 
     action_toggle_play = new QAction(QIcon(":/icons/play-fill.png"), "Play/Pause");
     action_toggle_play->setEnabled(false);
-    // action_toggle_play->setEnabled(false);
     addAction(action_toggle_play);
     connect(action_toggle_play, &QAction::triggered, parent, &TracerPanel::toggleExecution);
 
@@ -34,22 +33,28 @@ namespace ldb::gui {
     label_last_signal = new QLabel("");
     addWidget(label_last_signal);
 
+    // Breakpoint section
     addSeparator();
 
     action_breakpoints = new QAction(QIcon(":/icons/breakpoint.png"), "Display breakpoints");
+    connect(action_breakpoints, &QAction::triggered, parent, &TracerPanel::displayBreakpoints);
     action_breakpoints->setEnabled(false);
     addAction(action_breakpoints);
 
-    addSeparator();
+    action_step = new QAction(QIcon(":/icons/step.png"), "single-step");
+    connect(action_step, &QAction::triggered, parent, &TracerPanel::singlestep);
+    action_step->setEnabled(false);
+    addAction(action_step);
 
     // Program execution section
+    addSeparator();
+
     label_program_name = new QLabel("Program: ");
     addWidget(label_program_name);
 
     label_pid = new QLabel("PID: ");
     addWidget(label_pid);
 
-    connect(action_breakpoints, &QAction::triggered, parent, &TracerPanel::displayBreakpoints);
 
     connect(parent, &TracerPanel::signalReceived, this, &TracerToolBar::updateView);
     connect(parent, &TracerPanel::executionEnded, this, &TracerToolBar::updateButtons);
@@ -82,6 +87,7 @@ namespace ldb::gui {
 
     if (status == Process::Status::kStopped) {
       action_toggle_play->setIcon(QIcon(":/icons/play-fill.png"));
+      action_step->setEnabled(true);
     } else {
       action_toggle_play->setIcon(QIcon(":/icons/pause-fill.png"));
     }

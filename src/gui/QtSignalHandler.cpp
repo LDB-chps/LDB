@@ -20,9 +20,11 @@ namespace ldb::gui {
     if (not worker_thread or not worker_thread->isRunning()) return;
 
     worker_exit = true;
+    is_muted = true;
     update_cv.notify_all();
     worker_thread->wait();
     worker_exit = false;
+    is_muted = false;
   }
 
   void QtSignalHandler::reset(Process* p) {
@@ -82,7 +84,7 @@ namespace ldb::gui {
           break;
         }
       }
-      if (is_muted) {
+      if (is_muted and not worker_exit) {
         std::unique_lock<std::mutex> l(mutex);
         std::cout << "Muted !" << std::endl;
         worker_waiting = true;

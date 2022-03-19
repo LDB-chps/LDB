@@ -51,10 +51,20 @@ namespace ldb::gui {
     void toggleExecution();
 
     /**
+     * @brief Perform a single step in the tracee
+     */
+    void singlestep();
+
+    /**
      * @brief Stop the process without killing the tracer
      */
     void abortExecution();
 
+    /**
+     * @brief Restart the same command with the same arguments
+     * Note that the program may have changed (e.g. if it was recompiled)
+     * @param force
+     */
     void restartExecution(bool force = false);
 
     /**

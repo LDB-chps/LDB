@@ -11,12 +11,15 @@ namespace ldb::gui {
   class BreakpointModel : public QAbstractTableModel {
   public:
     BreakpointModel(QObject* parent, TracerPanel* tp);
-    int rowCount(const QModelIndex& parent) const override;
-    int columnCount(const QModelIndex& parent) const override;
+    int rowCount(const QModelIndex& parent = QModelIndex()) const override;
+    int columnCount(const QModelIndex& parent = QModelIndex()) const override;
     QVariant data(const QModelIndex& index, int role) const override;
     QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
 
     const Symbol* getSymbol(int row) const;
+
+    bool isBreakpoint(const Symbol* sym) const;
+    void toggleBreakpoint(const QModelIndex& index);
 
   public slots:
     void update();
@@ -37,6 +40,7 @@ namespace ldb::gui {
     virtual QSize sizeHint() const override {
       return QSize(800, 600);
     }
+
 
   private:
     QLineEdit* search_bar;
