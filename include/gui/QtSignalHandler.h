@@ -14,7 +14,7 @@ namespace ldb::gui {
 
     SignalEvent handleEvent(const SignalEvent& event) override;
 
-    void reset(Process* p) override;
+    void reset(Process* p, BreakPointHandler* bph) override;
 
     void mute() override;
     void unmute() override;

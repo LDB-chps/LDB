@@ -20,7 +20,7 @@ namespace ldb {
   bool ProcessTracer::restart() {
     process = Process::fromCommand(executable_path, arguments, true);
     if (not process) {
-      signal_handler->reset(nullptr);
+      signal_handler->reset(nullptr, nullptr);
       debug_info = nullptr;
       breakpoint_handler = nullptr;
       throw std::runtime_error("ProcessTracer: failed to reset the process");
@@ -40,7 +40,7 @@ namespace ldb {
     // We update the breakPoint table with new addresses
     breakpoint_handler->refreshBreakPoint(*debug_info->getSymbolTable(), oldBreakPoints);
 
-    signal_handler->reset(process.get());
+    signal_handler->reset(process.get(), breakpoint_handler.get());
     return true;
   }
 

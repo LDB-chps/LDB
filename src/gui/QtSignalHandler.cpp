@@ -27,10 +27,11 @@ namespace ldb::gui {
     is_muted = false;
   }
 
-  void QtSignalHandler::reset(Process* p) {
+  void QtSignalHandler::reset(Process* p, BreakPointHandler* bph) {
     stopThread();
     is_muted = false;
     process = p;
+    breakpoint_handler = bph;
     worker_thread = QThread::create(&QtSignalHandler::workerLoop, this);
     worker_thread->start();
   }

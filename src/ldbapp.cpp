@@ -27,7 +27,7 @@ namespace ldb {
     gui::MainWindow main_window;
     main_window.show();
 
-    tscl::Version::setCurrent(tscl::Version(0, 5, 0, "alpha"));
+    tscl::Version::setCurrent(tscl::Version(1, 0, 0, "alpha"));
     tscl::logger("Welcome, LDB version " + tscl::Version::current.to_string(),
                  tscl::Log::Information);
 
