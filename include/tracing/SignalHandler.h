@@ -7,6 +7,11 @@
 
 namespace ldb {
 
+  /**
+   * @brief Represents an event received by the signal handler.
+   * Groups the signal that was received, the status of the process after the signal, and a flag to
+   * check if the event is ignored and fatal
+   */
   class SignalEvent {
   public:
     SignalEvent(Signal signal, Process::Status status, bool is_ignored, bool is_fatal) noexcept
@@ -34,7 +39,10 @@ namespace ldb {
   private:
     Signal signal;
     Process::Status status;
+
+    // Set to true if the signal is ignored, meaning that the process was automatically resumed
     bool is_ignored;
+    // Set to true if the signal is fatal, meaning that the process was terminated
     bool is_fatal;
   };
 
@@ -101,7 +109,7 @@ namespace ldb {
      * @brief Wait for a signal to be received. Throws an exception on error (i.e the process was
      * killed)
      *
-     * @param timeout The timeout in useconds
+     * @param utimeout The timeout in useconds
      * If set to 0, the function will wait indefinitely, and is guaranteed to return a valid
      * event, or throw if it can't.
      *

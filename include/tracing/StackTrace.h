@@ -7,7 +7,9 @@ namespace ldb {
 
   class ProcessTracer;
 
-
+  /**
+   * @brief A stack trace, built from a set of stack frames.
+   */
   class StackTrace {
   public:
     StackTrace(ProcessTracer& tracer);
@@ -20,6 +22,10 @@ namespace ldb {
       return frames.empty();
     }
 
+    /**
+     * @brief If the stack trace reaches more than fifty frames, it is truncated.
+     * @return True if the stack trace is truncated, false otherwise.
+     */
     bool isTruncated() const {
       return is_truncated;
     }
