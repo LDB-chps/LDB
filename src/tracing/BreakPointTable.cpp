@@ -18,6 +18,11 @@ namespace ldb {
     breakPoints.erase(it);
   }
 
+  void BreakPointTable::removeAll() {
+    breakPoints.clear();
+  }
+
+
   const bool BreakPointTable::isBreakPoint(const Elf64_Addr addr) const {
     return breakPoints.find(addr) != breakPoints.end();
   }
