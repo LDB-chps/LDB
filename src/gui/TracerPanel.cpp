@@ -29,34 +29,31 @@ namespace ldb::gui {
     // We want to be able to dynamically resize the panels
     // For this, we need to create a horizontal_splitter, and put both the terminal the the other
     // widgets in it
-    //                    TOP_PANEL
+    //   CODE PANEL            |  OBJDUMP PANEL
+    //                    TOP SPLITTER
+    //                         |
     //   ============= HORIZONTAL SPLITTER ============
     //   MESSAGE PANEL         |  INFORMATION PANEL
-    //                 VERTICAL splitter
+    //                   BOTTOM SPLITTER
     //                         |
     auto* horizontal_splitter = new QSplitter(Qt::Vertical, this);
     layout->addWidget(horizontal_splitter);
 
-    // Create a layout for the inside of the horizontal_splitter
-    auto* top_panel_layout = new QHBoxLayout(nullptr);
-    top_panel_layout->setContentsMargins(0, 0, 0, 0);
-    top_panel_layout->setSpacing(0);
 
     // Create a dummy dummy_widget that will contain every top-side dummy_widget
-    auto top_widget = new QWidget;
-    top_widget->setLayout(top_panel_layout);
-    horizontal_splitter->addWidget(top_widget);
+    auto top_splitter = new QSplitter(Qt::Horizontal, this);
+    horizontal_splitter->addWidget(top_splitter);
 
     code_view = new SourceCodeView(this);
-    top_panel_layout->addWidget(code_view);
+    top_splitter->addWidget(code_view);
 
     objdump_view = new ObjdumpView(this);
-    top_panel_layout->addWidget(objdump_view);
+    top_splitter->addWidget(objdump_view);
 
     // Setup the bottom panel
     // INFORMATION PANEL || MESSAGE PANEL
-    auto* vertical_splitter = new QSplitter(Qt::Horizontal, horizontal_splitter);
-    horizontal_splitter->addWidget(vertical_splitter);
+    auto* bottom_splitter = new QSplitter(Qt::Horizontal, horizontal_splitter);
+    horizontal_splitter->addWidget(bottom_splitter);
 
     // The bottom panel should be smaller than the top side
     // High stretch factor for the top side
@@ -64,10 +61,10 @@ namespace ldb::gui {
     // Low stretch factor for the bottom side
     horizontal_splitter->setStretchFactor(1, 3);
 
-    auto* information_tab = new QTabWidget(vertical_splitter);
+    auto* information_tab = new QTabWidget(bottom_splitter);
     information_tab->setIconSize(QSize(16, 16));
     information_tab->setTabPosition(QTabWidget::South);
-    vertical_splitter->addWidget(information_tab);
+    bottom_splitter->addWidget(information_tab);
 
     // Setup the tab where the stack trace will be displayed
     stack_trace_view = new StackTraceView(this);
@@ -83,17 +80,15 @@ namespace ldb::gui {
     information_tab->addTab(libs, "Libraries");
     information_tab->setTabIcon(2, QIcon(":/icons/list-settings-line.png"));
 
-    auto* message_tabs = new QTabWidget(vertical_splitter);
+    auto* message_tabs = new QTabWidget(bottom_splitter);
     message_tabs->setIconSize(QSize(16, 16));
     message_tabs->setTabPosition(QTabWidget::South);
-    vertical_splitter->addWidget(message_tabs);
+    bottom_splitter->addWidget(message_tabs);
 
     // Setup the tab where the log will be displayed
     // Create a QtLogHandler that will display the log in the log widget
     auto& logger = tscl::logger.addHandler<QtLogHandler>("QtHandler");
     logger.tsType(tscl::timestamp_t::Partial);
-
-    breakpoints_dialog = new BreakpointsDialog(this);
 
     // Widget associated with the logger
     auto message = logger.getWidget();
@@ -111,6 +106,11 @@ namespace ldb::gui {
       pty_handler->reassignTo(process_tracer->getProcess().getMasterFd());
     });
     connect(this, &TracerPanel::executionEnded, [&]() { pty_handler->reassignTo(-1); });
+
+
+    // Ready the breakpoint dialog
+    // Since this can be quite big, we don't want to build it every time we need it
+    breakpoints_dialog = new BreakpointsDialog(this);
   }
 
   TracerPanel::~TracerPanel() {

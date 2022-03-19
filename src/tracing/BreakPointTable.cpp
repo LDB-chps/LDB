@@ -8,7 +8,7 @@ namespace ldb {
     static const unsigned long bpInstruction =
             (instruction & 0xFFFFFFFFFFFFFF00) | 0x00000000000000CC;
     ptrace(PTRACE_POKETEXT, pid, addr, bpInstruction);
-    breakPoints.insert(breakPoints.end(), std::pair<Elf64_Addr, unsigned long>(addr, instruction));
+    breakPoints.emplace(addr, instruction);
   }
 
   void BreakPointTable::remove(const pid_t pid, const Elf64_Addr addr) {

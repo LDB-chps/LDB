@@ -16,7 +16,7 @@ namespace ldb {
     BreakPointTable(const BreakPointTable& other) = delete;
     BreakPointTable& operator=(const BreakPointTable& other) = delete;
 
-    const std::map<Elf64_Addr, unsigned long> getBreakPoints() const {
+    const std::map<Elf64_Addr, unsigned long>& getBreakPoints() const {
       return breakPoints;
     }
 

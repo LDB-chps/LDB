@@ -174,7 +174,7 @@ namespace ldb {
     int getSlaveFd() const {
       return slave_ptty;
     }
-
+    
   private:
     /**
      * @brief The subprocess will use those pipes for redirecting its output

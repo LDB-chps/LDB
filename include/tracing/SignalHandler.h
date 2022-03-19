@@ -3,7 +3,7 @@
 #include <condition_variable>
 #include <optional>
 #include <thread>
-// #include "BreakPointHandler.h"
+#include "BreakPointHandler.h"
 
 namespace ldb {
 
@@ -40,7 +40,7 @@ namespace ldb {
 
   class SignalHandler {
   public:
-    SignalHandler(Process* process);
+    SignalHandler(Process* process, BreakPointHandler* bph);
     virtual ~SignalHandler() = default;
 
     /**
@@ -91,7 +91,7 @@ namespace ldb {
     std::optional<SignalEvent> pollEvent(size_t utimeout);
     std::atomic<bool> is_muted;
     std::vector<bool> ignored_signals;
-    // BreakPointHandler* breakpoint_handler;
+    BreakPointHandler* breakpoint_handler;
     Process* process;
   };
 

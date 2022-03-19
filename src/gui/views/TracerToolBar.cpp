@@ -90,9 +90,11 @@ namespace ldb::gui {
       action_step->setEnabled(true);
     } else {
       action_toggle_play->setIcon(QIcon(":/icons/pause-fill.png"));
+      action_step->setEnabled(false);
     }
 
-    if (status != Process::Status::kDead and status != Process::Status::kKilled) {
+    if (status != Process::Status::kDead and status != Process::Status::kKilled and
+        status != Process::Status::kExited) {
       action_toggle_play->setEnabled(true);
       action_reset->setEnabled(true);
       action_stop->setEnabled(true);
@@ -105,6 +107,8 @@ namespace ldb::gui {
 
   void TracerToolBar::updateView(SignalEvent evt) {
     updateButtons();
-    label_last_signal->setText(QString::fromStdString(signalToString(evt.getSignal())));
+    if (evt.getStatus() == Process::Status::kExited) label_last_signal->setText("Exited");
+    else
+      label_last_signal->setText(QString::fromStdString(signalToString(evt.getSignal())));
   }
 }// namespace ldb::gui

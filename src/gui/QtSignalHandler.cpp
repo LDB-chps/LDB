@@ -5,8 +5,8 @@
 
 namespace ldb::gui {
 
-  QtSignalHandler::QtSignalHandler(Process* process)
-      : SignalHandler(process), worker_thread(nullptr) {
+  QtSignalHandler::QtSignalHandler(Process* process, BreakPointHandler* bph)
+      : SignalHandler(process, bph), worker_thread(nullptr) {
     connect(this, &QtSignalHandler::ignoredEvent, this, &QtSignalHandler::resumeTracee);
     worker_thread = QThread::create(&QtSignalHandler::workerLoop, this);
     worker_thread->start();
@@ -57,6 +57,9 @@ namespace ldb::gui {
   }
 
   SignalEvent QtSignalHandler::handleEvent(const SignalEvent& event) {
+    if (event.getSignal() == Signal::kSIGTRAP and breakpoint_handler->isAtBreakpoint()) {
+      breakpoint_handler->resetBreakpoint();
+    }
     if (process->getStatus() == Process::Status::kStopped and
         ignored_signals[static_cast<size_t>(event.getSignal())] and
         event.getSignal() != Signal::kSIGCONT) {

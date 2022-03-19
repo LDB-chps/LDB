@@ -9,7 +9,7 @@ namespace ldb::gui {
   class QtSignalHandler : public QObject, public SignalHandler {
     Q_OBJECT
   public:
-    explicit QtSignalHandler(Process* process);
+    explicit QtSignalHandler(Process* process, BreakPointHandler* bph);
     ~QtSignalHandler() override;
 
     SignalEvent handleEvent(const SignalEvent& event) override;

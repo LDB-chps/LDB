@@ -1,3 +1,4 @@
+#pragma once
 #include <elf.h>
 #include <iostream>
 #include <optional>
@@ -24,7 +25,6 @@ namespace ldb {
 
     bool isAtBreakpoint() const;
     bool isBreakPoint(Elf64_Addr addr) const;
-
 
     bool resetBreakpoint();
 

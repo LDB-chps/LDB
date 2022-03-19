@@ -50,23 +50,11 @@ namespace ldb {
     bool restart();
 
     void resume() {
-      if (breakpoint_handler->isAtBreakpoint()) {
-        signal_handler->mute();
-        breakpoint_handler->resetBreakpoint();
-        signal_handler->unmute();
-      }
-
       process->resume();
     }
 
     void singlestep() {
       if (process->getStatus() != Process::Status::kStopped) return;
-      if (breakpoint_handler->isAtBreakpoint()) {
-        signal_handler->mute();
-        breakpoint_handler->resetBreakpoint();
-        signal_handler->unmute();
-      }
-
       // By default, the breakpoint handler jump to the next instruction when restoring a breakpoint
       ptrace(PTRACE_SINGLESTEP, process->getPid(), nullptr, nullptr);
     }
@@ -125,7 +113,7 @@ namespace ldb {
      */
     template<class Sighandler>
     Sighandler* makeSignalHandler() {
-      auto tmp = std::make_unique<Sighandler>(process.get());
+      auto tmp = std::make_unique<Sighandler>(process.get(), breakpoint_handler.get());
       // Get the res ptr before type casting to parent class
       auto res = tmp.get();
       signal_handler = std::move(tmp);

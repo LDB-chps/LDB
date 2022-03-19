@@ -9,7 +9,8 @@ namespace ldb {
 
   const SignalEvent SignalEvent::None{Signal::kSignalCount, Process::Status::kUnknown, true, false};
 
-  SignalHandler::SignalHandler(Process* process) : process(process), is_muted(false) {
+  SignalHandler::SignalHandler(Process* process, BreakPointHandler* bph)
+      : process(process), is_muted(false), breakpoint_handler(bph) {
     ignored_signals.resize(static_cast<size_t>(Signal::kSignalCount));
     ignored_signals.assign(ignored_signals.size(), false);
 

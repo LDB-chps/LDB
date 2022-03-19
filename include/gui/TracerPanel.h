@@ -72,10 +72,21 @@ namespace ldb::gui {
      */
     void displayCommandDialog();
 
+    /**
+     * @brief Display a dialog to select a breakpoint
+     */
     void displayBreakpoints() {
       breakpoints_dialog->show();
     }
 
+    /**
+     * @brief Starts the tracer
+     * @param command The command to start
+     * @param args Arguments to pass to the command
+     * @param force If true, the tracer will be restarted even if it is already running
+     * Otherwise, a popup will let the user decide whether to restart or not
+     * @return Truee if the execution was started, false otherwise
+     */
     bool startExecution(const std::string& command, const std::string& args, bool force = false);
 
     /**
@@ -110,14 +121,6 @@ namespace ldb::gui {
     void executionEnded();
 
   private:
-    void setupToolbar(QGridLayout* layout);
-
-    void setupCodeView(QGridLayout* layout);
-
-    void setupVariableView(QGridLayout* layout);
-
-    QTabWidget* setupTabbedPane();
-
     std::unique_ptr<ProcessTracer> process_tracer;
 
     QThread* update_thread = nullptr;
