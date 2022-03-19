@@ -162,7 +162,7 @@ namespace ldb::gui {
 
       last_path = current_object_file;
     }
-
+    
     label_file_path->setText(QString::fromStdString(current_object_file));
 
     // Search the current address in the file
