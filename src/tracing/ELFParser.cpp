@@ -158,7 +158,6 @@ namespace ldb {
 
     auto& dynsec = *dynsec_it;
     size_t ndyn = dynsec.sh_size / sizeof(Elf64_Dyn);
-    std::cout << "Found " << ndyn << " dynamic entries" << std::endl;
 
     // Parse the section entries until we find the DT_DEBUG
     for (size_t i = 0; i < ndyn; i++) {
@@ -291,26 +290,6 @@ namespace ldb {
     }
 
     return true;
-  }
-
-  // Parse the ELF file and return an object containing all debug information required for the
-  // debugger. For this, we use both libelf and libdwarf.
-  //
-  // Libelf is use to parse the file after it
-  // has been loaded in memory (Otherwise libdwarf requires a file descriptor)
-  std::unique_ptr<const DebugInfo> readDebugInfo(const std::filesystem::path& path,
-                                                 Process& process) {
-
-    try {
-      ELFFile elf_file(path);
-      if (not process.isAttached() and not process.attach()) return nullptr;
-      elf_file.parseDynamicSymbols(process);
-      return elf_file.yieldDebugInfo();
-
-    } catch (std::runtime_error& e) {
-      tscl::logger("Failed to parse debug information: " + std::string(e.what()), tscl::Log::Error);
-      return nullptr;
-    }
   }
 
 

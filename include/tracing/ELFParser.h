@@ -16,7 +16,6 @@ namespace ldb {
 
   /**
    * @brief Helper class to parse an elf file
-   * This class is declared locally since the user should only use the readDebugInfo(...) function
    * This allows the function to be stateless and thus thread-safe.
    */
   class ELFFile {
@@ -58,17 +57,45 @@ namespace ldb {
     }
 
   private:
-    // Load the entire file into memory
+    /**
+     * @brief Load the entire file into memory
+     * 
+     * @param elf_path path 
+     */
     void loadIntoMemory(const fs::path& elf_path);
 
-    // Parse a string table from memory
+    /**
+     * @brief Parse a string table from memory
+     * 
+     * @param str_header String table header
+     * @return std::string the string table content
+     */
     std::string parseStringTable(const Elf64_Shdr& str_header);
 
-    // Fill the sections vector
+    /**
+     * @brief Fill the sections vector
+     * 
+     * @return true
+     * @return false 
+     */
     bool parseSections();
 
+    /**
+     * @brief Read string in the process memory
+     * 
+     * @param process porcess to parse
+     * @param str_addr address of the string
+     * @return std::string string read
+     */
     static std::string parseLiveString(Process& process, Elf64_Addr str_addr);
 
+    /**
+     * @brief 
+     * 
+     * @param process 
+     * @param link_map_addr 
+     * @return std::vector<std::pair<Elf64_Addr, std::string>> 
+     */
     std::vector<std::pair<Elf64_Addr, std::string>> parseLinkMap(Process& process,
                                                                  Elf64_Addr link_map_addr);
 
@@ -90,9 +117,14 @@ namespace ldb {
     bool badbit;
   };
 
-  // We won't be wrapping libelf or libdwarf, so we'll keep the code simple without using classes
-  std::unique_ptr<const DebugInfo> readDebugInfo(const std::filesystem::path& filePath, Process& S);
 
+  /**
+   * @brief Convert a address to a line in file
+   * 
+   * @param path 
+   * @param addr 
+   * @return std::optional<std::pair<std::string, size_t>> 
+   */
   std::optional<std::pair<std::string, size_t>> addr2Line(const std::filesystem::path& path,
                                                           const Elf64_Addr addr);
 

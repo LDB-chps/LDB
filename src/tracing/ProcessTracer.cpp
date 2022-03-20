@@ -30,7 +30,7 @@ namespace ldb {
 
     // We save breakpoint for the next execution like dynamic libs can change addr
     auto oldBreakPoints = breakpoint_handler->saveBreakpoints(*debug_info->getSymbolTable());
-    breakpoint_handler->refreshPid(process->getPid());
+    breakpoint_handler->resetPid(process->getPid());
 
     // We must re-read the symbols
     // While the path may not have changed, the user may have recompiled the program

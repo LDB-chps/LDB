@@ -12,8 +12,8 @@ namespace ldb {
    *
    */
   class Symbol {
-  public:
     friend std::ostream& operator<<(std::ostream& os, const Symbol& symbol);
+  public:
 
     Symbol(const std::string& strName, const std::string& strType)
         : addr(0), name(strName), line(0), type(strType) {}
@@ -36,10 +36,6 @@ namespace ldb {
       addr += base;
     }
 
-    /**
-     * @brief Returns the file where this symbols is defined
-     * @return Return an optional file path
-     */
     const std::filesystem::path& getFile() const {
       return file;
     }
@@ -48,18 +44,10 @@ namespace ldb {
       file = std::filesystem::path(strFile);
     }
 
-    /**
-     * The address returned may be relative to the source file, or the current binary, if the symbol
-     * was relocated
-     * @return Returns the address of this symbol
-     */
     Elf64_Addr getAddress() const {
       return addr;
     }
 
-    /**
-     * @return Returns the name of this symbol
-     */
     const std::string& getName() const {
       return name;
     }

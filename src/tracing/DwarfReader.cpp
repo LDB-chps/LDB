@@ -4,12 +4,21 @@
 namespace ldb {
 
   enum class LANGAGE { C, CPP, UNKNOWN };
-
+  
+  /**
+   * @brief Localy file class to read dwarf information and populate the symbol table
+   * 
+   */
   class DwarfReader {
   public:
     DwarfReader(Elf* elf);
     ~DwarfReader() = default;
 
+    /**
+     * @brief Read the debug dwarf inforamation and populate the symbol table
+     * 
+     * @param symTab symbol table to populate
+     */
     void populateDwarf(SymbolTable& symTab);
 
     const LANGAGE getLangage() {
@@ -17,13 +26,55 @@ namespace ldb {
     }
 
   private:
+    /**
+     * @brief Read the compute unit of dwarf file
+     * 
+     * @param symTab symbol table to populate
+     */
     void readCu(SymbolTable& symTab);
+
+    /**
+     * @brief Recurcive reading of the debug information entry of dwarf file
+     * 
+     * @param die debug information entry to read
+     * @param symTable Symbol table to populate
+     */
     void getDieAndSiblings(const Dwarf_Die die, SymbolTable& symTable);
 
+    /**
+     * @brief Read the language of the source code
+     * 
+     * @param die debug information entry to read
+     */
     void loadLangage(Dwarf_Die die);
+
+    /**
+     * @brief Load the string table of source file
+     * 
+     * @param die debug information entry to read
+     */
     void loadFileTable(Dwarf_Die die);
+
+    /**
+     * @brief Fill the map of type with the basic type
+     * 
+     * @param die debug information entry to read
+     */
     void loadBasicTypeMap(Dwarf_Die die);
+
+    /**
+     * @brief Fill the map of type with the derived type
+     * 
+     * @param die debug information entry to read
+     */
     void loadComplexeTypeMap(Dwarf_Die die);
+
+    /**
+     * @brief Fill function information with arguments and local variables
+     * 
+     * @param die debug information entry to read
+     * @param fun function to fill
+     */
     void parseFunction(Dwarf_Die die, Symbol& fun);
 
   private:
@@ -137,27 +188,7 @@ namespace ldb {
       if (got_type) fun->setType(type);
 
       if (res == DW_DLV_OK) parseFunction(child, *fun);
-    } /* else if (tag == DW_TAG_variable) {
-       variable info;
-       const int got_name = !dwarf_diename(die, &name, nullptr);
-
-       const int got_type = !dwarf_attr(die, DW_AT_type, &attr, nullptr) &&
-                            !dwarf_formref(attr, &in_type, nullptr);
-
-       if (got_type) {
-         const auto it = type_tabl.find(in_type);
-         if (it != type_tabl.end()) type = it->second;
-       }
-
-       const int got_line = !dwarf_attr(die, DW_AT_decl_line, &attr, nullptr) &&
-                            !dwarf_formudata(attr, &in_line, nullptr);
-
-       if (got_name) str_name = std::string(name);
-       info.name = std::string(name);
-       info.type = type;
-       info.line = in_line;
-       SYMBOLS_TABL.vars.push_back(info);
-     }*/
+    }
     else if (res == DW_DLV_OK) {
       getDieAndSiblings(child, symTable);
       cur_die = child;
@@ -255,7 +286,7 @@ namespace ldb {
         Dwarf_Off offset = 0;
         std::string name = "";
         Dwarf_Attribute attr = nullptr;
-        if (tag == DW_TAG_pointer_type || tag == DW_TAG_const_type) {
+        if (tag == DW_TAG_pointer_type || tag == DW_TAG_const_type || tag == DW_TAG_array_type) {
           dwarf_die_CU_offset(cur_child, &offset, nullptr);
 
           Dwarf_Off in_type = 0;
@@ -271,6 +302,9 @@ namespace ldb {
                   break;
                 case DW_TAG_const_type:
                   name = "const " + it->second;
+                  break;
+                case DW_TAG_array_type:
+                  name = it->second + "[]";
                   break;
                 default:
                   break;

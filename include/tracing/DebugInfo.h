@@ -8,6 +8,10 @@
 #include <vector>
 
 namespace ldb {
+  /**
+   * @brief Class containt all information about debug information
+   * 
+   */
   class DebugInfo {
   public:
     DebugInfo() = default;

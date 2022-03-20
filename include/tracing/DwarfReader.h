@@ -16,6 +16,12 @@
 
 namespace ldb {
 
+  /**
+   * @brief Read dwarf information and fill the DebutInfo 
+   * 
+   * @param elf elf object
+   * @param db structure DebugInfo to complit
+   */
   void readDwarfDebugInfo(Elf* elf, DebugInfo& db);
 
 }// namespace ldb

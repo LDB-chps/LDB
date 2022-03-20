@@ -25,7 +25,7 @@ namespace ldb {
     return res;
   }
 
-  void BreakPointHandler::refreshPid(const pid_t p) {
+  void BreakPointHandler::resetPid(const pid_t p) {
     pid = p;
   }
 

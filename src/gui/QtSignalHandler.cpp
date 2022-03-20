@@ -38,7 +38,6 @@ namespace ldb::gui {
 
   void QtSignalHandler::mute() {
 
-    std::cout << "Muting" << std::endl;
     if (is_muted or not worker_thread or not worker_thread->isRunning()) return;
 
     is_muted = true;
@@ -47,7 +46,6 @@ namespace ldb::gui {
 
     // Wait until the thread signals that it has finished
     update_cv.wait(l, [this]() -> bool { return worker_waiting; });
-    std::cout << "Done muting" << std::endl;
   }
 
   void QtSignalHandler::unmute() {
@@ -98,11 +96,9 @@ namespace ldb::gui {
       }
       if (is_muted and not worker_exit) {
         std::unique_lock<std::mutex> l(mutex);
-        std::cout << "Muted !" << std::endl;
         worker_waiting = true;
         update_cv.notify_one();
         update_cv.wait(l);
-        std::cout << "Unmuted !" << std::endl;
         worker_waiting = false;
       }
     }
