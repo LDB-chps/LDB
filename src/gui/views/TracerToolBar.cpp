@@ -88,9 +88,11 @@ namespace ldb::gui {
     if (status == Process::Status::kStopped) {
       action_toggle_play->setIcon(QIcon(":/icons/play-fill.png"));
       action_step->setEnabled(true);
+      action_breakpoints->setEnabled(true);
     } else {
       action_toggle_play->setIcon(QIcon(":/icons/pause-fill.png"));
       action_step->setEnabled(false);
+      action_breakpoints->setEnabled(false);
     }
 
     if (status != Process::Status::kDead and status != Process::Status::kKilled and
