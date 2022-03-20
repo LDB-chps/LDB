@@ -5,6 +5,10 @@
 
 namespace ldb {
 
+  /**
+   * @brief Represents a snapshot of one registers of a process.
+   * Associates a name with a value
+   */
   class RegisterValue {
   public:
     RegisterValue(const std::string& name, long value) : name(name), value(value) {}
@@ -28,6 +32,10 @@ namespace ldb {
     long value;
   };
 
+  /**
+   * @brief Represents a snapshot of all the registers of the process
+   * Currently only x86_64 is supported, and dies not handle FP registers
+   */
   class RegistersSnapshot {
   public:
     explicit RegistersSnapshot(Process& process);

@@ -4,6 +4,11 @@
 
 namespace ldb {
 
+  /**
+   * @brief Represent a single frame in the stack trace.
+   * Groups the name of the current function, the address of the function, the current offset from
+   * the beginning of the function, and the associated symbol if one was found
+   */
   class StackFrame {
   public:
     StackFrame(Elf64_Addr addr, Elf64_Off offset, const Symbol* symbol);
